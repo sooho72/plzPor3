@@ -31,6 +31,7 @@ public class Board {
     private User user;
 
     public void updateHitcount() {
+
         this.hitcount = this.hitcount+1;
     }
 }
