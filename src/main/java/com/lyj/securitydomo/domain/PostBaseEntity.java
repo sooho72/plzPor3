@@ -21,5 +21,4 @@ abstract class PostBaseEntity {
     @LastModifiedDate
     @Column(name = "upDatedAt")
     private Date upDatedAt; //수정날짜
-
 }

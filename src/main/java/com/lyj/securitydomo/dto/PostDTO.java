@@ -28,4 +28,6 @@ public class PostDTO {
     private Date createdAt; //등록날짜
 
     private Date upDatedAt; //수정날짜
+
+    private Long userId; // 작성자 ID
 }

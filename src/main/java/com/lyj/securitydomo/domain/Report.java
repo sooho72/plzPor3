@@ -23,19 +23,17 @@ public class Report {
     private Post post;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "userId")
     private User user;
 
     @Column(nullable = false, length = 255)
     private String reason;
 
-    @ManyToOne
-    @JoinColumn(name = "reportStatusId")
-    private ReportStatus reportStatus;
+    @Column(nullable = false, length = 255)
+    private String status;
 
-    @ManyToOne
-    @JoinColumn(name = "categoryId")
-    private ReportCategory categoryId;
+    @Column(nullable = false, length = 255)
+    private String category;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
