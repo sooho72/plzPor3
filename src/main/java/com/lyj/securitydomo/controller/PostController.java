@@ -22,11 +22,11 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;;
 public class PostController {
     private final PostService postService;
 
-    @GetMapping("/list1")
-    public String list1(Model model) {
+    @GetMapping("/list")
+    public String list(Model model) {
         List<PostDTO> posts = postService.getAllPosts();
         model.addAttribute("posts", posts);
-        return "post/list1"; // list1.html을 지정
+        return "post/list"; // list.html을 지정
     }
 
 
