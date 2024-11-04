@@ -27,7 +27,6 @@ public class CustomSecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequestsConfigurer -> authorizeHttpRequestsConfigurer
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                         .requestMatchers("/login", "/sinup", "/user/**", "/","/all","/board/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/board/**").permitAll()
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(formLoginConfigurer -> formLoginConfigurer
@@ -35,7 +34,7 @@ public class CustomSecurityConfig {
                         .loginProcessingUrl("/loginProcess")
                         .usernameParameter("username")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/"))
+                        .defaultSuccessUrl("/post/list1"))
                 .logout(logoutConfigurer -> logoutConfigurer
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")

@@ -10,7 +10,13 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -59,4 +65,18 @@ public class PostRepositoryTest {
         Post post = result.orElseThrow();
         log.info(post);
     }
-}
+
+
+
+
+
+        @Test
+        public void testFindAll() {
+            List<Post> posts = postRepository.findAll();
+            if (posts.isEmpty()) {
+                log.info("No posts found.");
+            } else {
+                log.info("Posts found: {}", posts);
+            }
+        }
+    }

@@ -5,11 +5,14 @@ import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.domain.Post;
 import com.lyj.securitydomo.dto.PostDTO;
 import com.lyj.securitydomo.repository.PostRepository;
+import groovy.transform.ASTTest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
@@ -24,6 +27,14 @@ import java.util.Arrays;
 public class PostServiceImpl implements PostService {
     private final ModelMapper modelMapper;
     private final PostRepository postRepository;
+
+    @Override
+    public List<PostDTO> getAllPosts() {
+        List<Post> posts = postRepository.findAll();
+        return posts.stream()
+                .map(post -> modelMapper.map(post, PostDTO.class))
+                .collect(Collectors.toList());
+    }
 
     @Override
     public Long register(PostDTO postDTO) {
@@ -77,4 +88,6 @@ public class PostServiceImpl implements PostService {
                 .total((int) result.getTotalElements())
                 .build();
     }
+
+
 }

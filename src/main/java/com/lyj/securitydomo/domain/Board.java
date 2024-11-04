@@ -30,8 +30,12 @@ public class Board {
     @JoinColumn(name="user_id")
     private User user;
 
-    public void updateHitcount() {
-
-        this.hitcount = this.hitcount+1;
+    @PrePersist
+    public void prePersist() {
+        this.hitcount = this.hitcount == null ? 0 : this.hitcount ;
     }
+//    public void updateHitcount() {
+//
+//        this.hitcount = this.hitcount+1;
+//    }
 }

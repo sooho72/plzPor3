@@ -1,6 +1,7 @@
 package com.lyj.securitydomo.dto;
 
 
+import com.lyj.securitydomo.domain.Post;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -30,4 +32,7 @@ public class PostDTO {
     private Date upDatedAt; //수정날짜
 
     private Long userId; // 작성자 ID
+
+    private String username; //username
+
 }

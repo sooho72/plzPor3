@@ -30,7 +30,8 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Board findById(Long num) {
         Board board = boardRepository.findById(num).get();
-        board.updateHitcount(); // 조회수 증가
+        board.setHitcount(board.getHitcount()+1);
+        boardRepository.save(board);// 조회수 증가
         return board;
     }
 

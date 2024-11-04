@@ -11,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.List;
+
 import static org.hibernate.query.sqm.tree.SqmNode.log;;
 
 @Controller
@@ -21,12 +23,11 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("/list1")
-    public void list1(PageRequestDTO pageRequestDTO, Model model) {
-
-        PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
-
-        log.info(responseDTO);
-
-        model.addAttribute("posts", responseDTO.getDtoList());
+    public String list1(Model model) {
+        List<PostDTO> posts = postService.getAllPosts();
+        model.addAttribute("posts", posts);
+        return "post/list1"; // list1.html을 지정
     }
+
+
 }

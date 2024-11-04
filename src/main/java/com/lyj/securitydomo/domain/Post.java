@@ -20,11 +20,8 @@ public class Post extends PostBaseEntity {
     private String title ; // 제목
     private String contentText ; //게시글본문내용저장
 
-    @ManyToOne(fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,
-            optional = true)
-
-    @JoinColumn(name="userId")
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, optional = true)
+    @JoinColumn(name = "userId")
     private User user;
 
 
