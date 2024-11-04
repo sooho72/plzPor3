@@ -33,8 +33,7 @@ public class CustomSecurityConfig {
                         .loginProcessingUrl("/loginProcess")
                         .usernameParameter("username")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/")
-                        .permitAll())
+                        .defaultSuccessUrl("/"))
                 .logout(logoutConfigurer -> logoutConfigurer
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")

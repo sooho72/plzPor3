@@ -21,12 +21,12 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="board:${lists}">
+            <tr th:each="post:${lists}">
                 <td>[[${board.num}]]</td>
-                <td><a th:href="|@{/board/view(num=${board.num})}|">[[${board.title }]]</a></td>
-                <td>[[${board.writer }]]</td>
-                <td>[[${board.regdate }]]</td>
-                <td>[[${board.hitcount }]]</td>
+                <td><a th:href="|@{/templates/post/view(num=${post.num})}|">[[${post.title }]]</a></td>
+                <td>[[${post.writer }]]</td>
+                <td>[[${post.regdate }]]</td>
+                <td>[[${post.hitcount }]]</td>
             </tr>
             </tbody>
         </table>
