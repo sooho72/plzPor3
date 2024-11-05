@@ -15,7 +15,7 @@ import java.util.Date;
 @Entity
 public class Report {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //자동증가
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer reportId;
 
     @ManyToOne
@@ -26,15 +26,29 @@ public class Report {
     @JoinColumn(name = "userId")
     private User user;
 
+    @Enumerated(EnumType.STRING) // 문자열로 저장
+    @Column(nullable = false)
+    private ReportCategory category; // 열거형으로 변경
+
     @Column(nullable = false, length = 255)
     private String reason;
 
-    @Column(nullable = false, length = 255)
-    private String status;
-
-    @Column(nullable = false, length = 255)
-    private String category;
+    @Enumerated(EnumType.STRING) // 문자열로 저장
+    @Column(nullable = false)
+    private ReportStatus status; // 열거형으로 변경
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
+
+    public enum ReportCategory {
+        SPAM,
+        ABUSE,
+        OTHER // 여기에 욕설, 스팸, 광고, 홍보 추가
+    }
+
+    public enum ReportStatus {
+        PENDING,
+        COMPLETED // 필요시 추가
+    }
+
 }

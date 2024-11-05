@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AdminController {
     @GetMapping("/admin_index")
     public String list() {
-        return "admin/admin_index";  // 뷰 이름을 문자열로 반환
+        return "adminIndex";  // 뷰 이름을 문자열로 반환
     }
 }

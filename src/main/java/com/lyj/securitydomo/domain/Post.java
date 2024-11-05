@@ -31,4 +31,11 @@ public class Post extends PostBaseEntity {
     }
 
 
+    public Long getId() {
+        return postId;
+    }
+
+    public void setCreatedAt(Date date) {
+
+    }
 }
