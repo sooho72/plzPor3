@@ -36,22 +36,23 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public void createReport(ReportDTO reportDTO) {
+        logger.info("신고 생성 요청: postId={}, userId={}, category={}, reason={}",
+                reportDTO.getPostId(), reportDTO.getUserId(), reportDTO.getCategory(), reportDTO.getReason());
 
-
-        Post post = postRepository.findById(reportDTO.getPostId())
+        Post post = postRepository.findById(Long.valueOf(reportDTO.getPostId()))
                 .orElseThrow(() -> {
-                    logger.error("해당 게시글을 찾을 수 없습니다: postId={}",reportDTO.getPostId());
+                    logger.error("해당 게시글을 찾을 수 없습니다: postId={}", reportDTO.getPostId());
                     return new IllegalArgumentException("해당 게시글을 찾을 수 없습니다.");
                 });
 
-        User user = userRepository.findById(reportDTO.getUserId())
+        User user = userRepository.findById(Long.valueOf(reportDTO.getUserId()))
                 .orElseThrow(() -> {
-                    logger.error("해당 사용자를 찾을 수 없습니다: userId={}",reportDTO.getUserId());
+                    logger.error("해당 사용자를 찾을 수 없습니다: userId={}", reportDTO.getUserId());
                     return new IllegalArgumentException("해당 사용자를 찾을 수 없습니다.");
                 });
 
         // 열거형으로 변환하여 설정
-        Report.ReportCategory reportCategory = Report.ReportCategory.valueOf(reportDTO.getCategory());
+        Report.ReportCategory reportCategory = Report.ReportCategory.valueOf(reportDTO.getCategory().toUpperCase());
 
         Report report = Report.builder()
                 .post(post)

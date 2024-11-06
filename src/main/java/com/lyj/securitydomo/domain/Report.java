@@ -16,7 +16,7 @@ import java.util.Date;
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer reportId;
+    private Long reportId;
 
     @ManyToOne
     @JoinColumn(name = "postId")
@@ -43,12 +43,23 @@ public class Report {
     public enum ReportCategory {
         SPAM,
         ABUSE,
-        OTHER // 여기에 욕설, 스팸, 광고, 홍보 추가
+        ADVERTISING,
+        PROMOTION,
     }
 
     public enum ReportStatus {
         PENDING,
         COMPLETED // 필요시 추가
+    }
+    @Override
+    public String toString() {
+        return "Report{" +
+                "reportId=" + reportId +
+                ", category=" + category +
+                ", reason='" + reason + '\'' +
+                ", status=" + status +
+                ", createdAt=" + createdAt +
+                '}';
     }
 
 }
