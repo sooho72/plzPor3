@@ -42,6 +42,8 @@ public class PostRepositoryTest {
                     .title("title" + i)
                     .contentText("content" + i)
                     .user(user) // 가져온 사용자 정보를 사용
+                    .requiredParticipants(i + 5) // 모집 인원 설정 (예: 6~15)
+                    .status(Post.Status.모집중) // 모집 상태 설정
                     .build();
 
             Post result = postRepository.save(post);

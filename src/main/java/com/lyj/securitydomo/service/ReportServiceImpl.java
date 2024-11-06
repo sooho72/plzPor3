@@ -1,13 +1,12 @@
+
 package com.lyj.securitydomo.service;
 
-import com.lyj.securitydomo.domain.Report;
 import com.lyj.securitydomo.domain.Post;
-import com.lyj.securitydomo.domain.User;
+import com.lyj.securitydomo.domain.Report;
 import com.lyj.securitydomo.dto.ReportDTO;
 import com.lyj.securitydomo.repository.ReportRepository;
 import com.lyj.securitydomo.repository.PostRepository;
 import com.lyj.securitydomo.repository.UserRepository;
-import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +35,8 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public void createReport(ReportDTO reportDTO) {
-        logger.info("신고 생성 요청: postId={}, userId={}, category={}, reason={}",
-                reportDTO.getPostId(), reportDTO.getUserId(), reportDTO.getCategory(), reportDTO.getReason());
+        logger.info("신고 생성 요청: postId={},  category={}, reason={}",
+                reportDTO.getPostId(), reportDTO.getCategory(), reportDTO.getReason());
 
         Post post = postRepository.findById(Long.valueOf(reportDTO.getPostId()))
                 .orElseThrow(() -> {
@@ -45,18 +44,18 @@ public class ReportServiceImpl implements ReportService {
                     return new IllegalArgumentException("해당 게시글을 찾을 수 없습니다.");
                 });
 
-        User user = userRepository.findById(Long.valueOf(reportDTO.getUserId()))
-                .orElseThrow(() -> {
-                    logger.error("해당 사용자를 찾을 수 없습니다: userId={}", reportDTO.getUserId());
-                    return new IllegalArgumentException("해당 사용자를 찾을 수 없습니다.");
-                });
 
-        // 열거형으로 변환하여 설정
-        Report.ReportCategory reportCategory = Report.ReportCategory.valueOf(reportDTO.getCategory().toUpperCase());
+        // 열거형으로 변환하여 설정하고 유효하지 않은 경우 예외 처리
+        Report.ReportCategory reportCategory;
+        try {
+            reportCategory = Report.ReportCategory.valueOf(reportDTO.getCategory().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            logger.error("유효하지 않은 신고 유형: category={}", reportDTO.getCategory());
+            throw new IllegalArgumentException("유효하지 않은 신고 유형입니다.");
+        }
 
         Report report = Report.builder()
                 .post(post)
-                .user(user)
                 .category(reportCategory)
                 .reason(reportDTO.getReason())
                 .status(Report.ReportStatus.PENDING)

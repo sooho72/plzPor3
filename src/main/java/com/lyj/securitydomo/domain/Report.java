@@ -13,6 +13,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Table(name = "report")
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,9 +23,6 @@ public class Report {
     @JoinColumn(name = "postId")
     private Post post;
 
-    @ManyToOne
-    @JoinColumn(name = "userId")
-    private User user;
 
     @Enumerated(EnumType.STRING) // 문자열로 저장
     @Column(nullable = false)

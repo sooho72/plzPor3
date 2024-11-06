@@ -28,7 +28,7 @@ public class PageRequestDTO {
 
     public String[] getTypes() {
         if (type == null || type.isEmpty()) {
-            return new String[0]; // 빈 배열 반환
+            return null;
         }
         return type.split("");
     }
@@ -43,18 +43,22 @@ public class PageRequestDTO {
     public String getLink() {
         if (link == null) {
             StringBuilder builder = new StringBuilder();
-            builder.append("page=").append(this.page)
-                    .append("&size=").append(this.size);
-            if (type != null && !type.isEmpty()) {
-                builder.append("&type=").append(type);
+
+            builder.append("page=" + this.page);
+
+            builder.append("&size=" + this.size);
+
+            if (type != null && type.length() > 0) {
+                builder.append("&type=" + type);
             }
-            if (keyword != null && !keyword.isEmpty()) {
+            if (keyword != null) {
                 try {
-                    builder.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
+                    builder.append("&keyword=" + URLEncoder.encode(keyword, "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    // 예외 처리 로직 추가
+
                 }
             }
+
             link = builder.toString();
         }
         return link;

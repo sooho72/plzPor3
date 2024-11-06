@@ -24,7 +24,6 @@ public class ReportRepositoryTests {
     public void testInsertSingleReport() {
         Report report = Report.builder()
                 .post(postRepository.findById(1L).orElseThrow(() -> new IllegalArgumentException("Post not found")))
-                .user(userRepository.findById(1L).orElseThrow(() -> new IllegalArgumentException("User not found")))
                 .category(Report.ReportCategory.SPAM) // enum으로 변경
                 .reason("Test reason")
                 .status(Report.ReportStatus.PENDING)

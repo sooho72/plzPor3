@@ -44,7 +44,7 @@
                    th:attr="data-post-id=${post.postId},data-user-id=${post.userId}">
                 <button class="btn btn-outline-danger mt-auto"
                         data-bs-toggle="modal" data-bs-target="#reportModal"
-                        > <!-- 현재 로그인한 사용자 ID -->
+                > <!-- 현재 로그인한 사용자 ID -->
                   신고하기
                 </button>
                 <a class="btn btn-outline-dark mt-auto" th:href="@{/templates/posting/{postId}(postId=${post.postId})}">신청하기</a>
@@ -95,11 +95,9 @@
 
       const button = event.relatedTarget; // 클릭된 버튼
       const postId = button.closest('.text-center').getAttribute('data-post-id'); // 부모 요소에서 data-post-id 가져오기
-      const userId = button.closest('.text-center').getAttribute('data-user-id'); // 부모 요소에서 data-user-id 가져오기
 
       // 가져온 값 출력
       console.log("Post ID:", postId);
-      console.log("User ID:", userId);
 
       // 신고하기 버튼 클릭 이벤트 리스너
       document.getElementById('submitReport').onclick = function () {
@@ -109,7 +107,7 @@
         console.log("Selected category: ", category);
         const reason = document.getElementById('reason').value; // 신고 사유
 
-        console.log("Sending report:", { postId, userId, category, reason });
+        console.log("Sending report:", { postId, category, reason });
 
         fetch('/report/create', {
           method: 'POST',
@@ -118,7 +116,6 @@
           },
           body: JSON.stringify({ // JSON으로 직렬화하여 전송
             postId: postId,
-            userId: userId,
             category: category,
             reason: reason,
           }),

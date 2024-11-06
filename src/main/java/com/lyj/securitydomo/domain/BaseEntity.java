@@ -13,7 +13,7 @@ import java.util.Date;
 @EntityListeners(value = {AbstractMethodError.class})
 @Getter
 
-abstract class PostBaseEntity {
+abstract class BaseEntity {
     @CreatedDate
     @Column(name = "createdAt",updatable = false)
     private Date createdAt; //등록날짜
