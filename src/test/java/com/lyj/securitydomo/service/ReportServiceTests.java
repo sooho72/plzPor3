@@ -1,22 +1,21 @@
-package com.lyj.securitydomo;
+package com.lyj.securitydomo.service;
 
-import com.lyj.securitydomo.service.PostService;
 import groovy.util.logging.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@Slf4j
 @SpringBootTest
 @Log4j2
-public class PostServiceTest {
-    private static final Logger log = LogManager.getLogger(PostServiceTest.class);
+public class ReportServiceTests {
     @Autowired
-    private PostService postService;
+    private ReportService reportService;
     @Test
     public void testRegister() {
-        log.info(postService.getClass().getName());
-    }
+    log.info(reportService.getClass().getName());
+}}
 
-}

@@ -1,5 +1,7 @@
+
 package com.lyj.securitydomo.controller;
 
+import com.lyj.securitydomo.dto.ReportDTO;
 import com.lyj.securitydomo.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,16 +19,21 @@ public class ReportController {
     private ReportService reportService;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createReport(@RequestParam Long postId,
-                                               @RequestParam Long userId,
-                                               @RequestParam String category,
-                                               @RequestParam String reason) {
-        // 로그 찍기
-        logger.info("신고 생성 요청: postId={}, userId={}, category={}, reason={}", postId, userId, category, reason);
+    //@RequestBody, @RequestParam:요청 파라미터
+    //(@RequestParam Long id String name) 형태 -> "/create?name="홍길동"&id=hkd 하나하나씩보낸다
+    //(@RequestBody ReportDTO) 몸통으로 전체를 받겟다,insert일때, form으로 통째로)
+    //JSON타입으로 받아서 ReportDTO에서 객체로 받음
+        public ResponseEntity<String> createReport(@RequestBody ReportDTO reportDTO) {
 
-        reportService.createReport(postId, userId, category, reason);
+        logger.info(reportDTO.toString());
+
+        // 로그 찍기
+        logger.info("신고 생성 요청: ",reportDTO);
+
+        createReport(reportDTO);
         logger.info("신고가 성공적으로 접수되었습니다.");
 
         return ResponseEntity.ok("신고가 접수되었습니다."); // 여기서 문자열 응답
     }
+
 }

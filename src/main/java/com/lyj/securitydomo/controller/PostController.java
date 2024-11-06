@@ -17,16 +17,17 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;;
 
 @Controller
 @Log4j2
-@RequestMapping("/post")
+@RequestMapping("/posting")
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
 
     @GetMapping("/list")
     public String list(Model model) {
+        log.info("::::::::::::::::::::list::::::::::::::::::::::");
         List<PostDTO> posts = postService.getAllPosts();
         model.addAttribute("posts", posts);
-        return "post/list"; // list.html을 지정
+        return "posting/list"; // list.html을 지정
     }
 
 

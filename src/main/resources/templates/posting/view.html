@@ -28,14 +28,14 @@
 
     <div class="form-group mt-5">
       <span th:if="${#authentication.principal.username==board.getWriter()}">
-        <a th:href="|@{/templates/post/modify(num=${board.num})}|">
+        <a th:href="|@{/templates/posting/modify(num=${board.num})}|">
             <button type="button" id="btnUpdate" class="btn btn-secondary">수정</button>
         </a>
-        <a th:href="|@{/templates/post/delete(num=${board.num})}|">
+        <a th:href="|@{/templates/posting/delete(num=${board.num})}|">
             <button type="button" id="btnDelete" class="btn btn-danger">삭제</button>
         </a>
       </span>
-       <a th:href="|@{/templates/post/list}|">
+       <a th:href="|@{/templates/posting/list}|">
           <button type="button" id="btnList" class="btn btn-info">List</button>
       </a>
     </div>

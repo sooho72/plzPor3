@@ -26,7 +26,7 @@ public class CustomSecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.disable())
                 .authorizeHttpRequests(authorizeHttpRequestsConfigurer -> authorizeHttpRequestsConfigurer
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                        .requestMatchers("/login", "/sinup", "/user/**", "/", "/all", "/board/**").permitAll()
+                        .requestMatchers("/login", "/sinup", "/user/**", "/", "/all", "/posting/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/report/create").permitAll() // 신고하기 URL 허용
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
@@ -35,7 +35,7 @@ public class CustomSecurityConfig {
                         .loginProcessingUrl("/loginProcess")
                         .usernameParameter("username")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/post/list"))
+                        .defaultSuccessUrl("/posting/list"))
                 .logout(logoutConfigurer -> logoutConfigurer
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")
