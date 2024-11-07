@@ -5,7 +5,6 @@ import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
 import com.lyj.securitydomo.dto.upload.UploadFileDTO;
 import com.lyj.securitydomo.service.PostService;
-import groovy.util.logging.Log4j2;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.coobird.thumbnailator.Thumbnailator;
@@ -27,182 +26,160 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-
-import static org.hibernate.query.sqm.tree.SqmNode.log;
+import lombok.extern.log4j.Log4j2;
 
 @Controller
 @Log4j2
-@RequestMapping("/post")
+@RequestMapping("/posting")
 @RequiredArgsConstructor
 public class PostController {
+
     @Value("${com.lyj.securitydomo.upload.path}")
     private String uploadPath;
 
     private final PostService postService;
 
-    @GetMapping("/list1")
-    public void list1(PageRequestDTO pageRequestDTO, Model model) {
+    /**
+     * 게시글 목록을 조회하고 모델에 전달하는 메서드
+     */
+    @GetMapping("/list")
+    public String list(PageRequestDTO pageRequestDTO, Model model) {
         PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
-        log.info(responseDTO);
 
-        // 게시글 리스트를 ""라는 이름으로 모델에 추가
-        model.addAttribute("lists", responseDTO.getDtoList());
+        responseDTO.getDtoList().forEach(postDTO -> {
+            log.info(postDTO.toString());
+        });
+
+
+
+        // DTO 리스트가 null인 경우 빈 리스트로 처리
+//        List<PostDTO> posts = Optional.ofNullable(responseDTO.getDtoList()).orElse(new ArrayList<>());
+
+        // DTO 리스트 로그 출력
+//        posts.forEach(postDTO -> {
+//            log.info("PostDTO ID: {}", postDTO.getPostId() != null ? postDTO.getPostId() : "null");
+//            log.info("Title: {}", postDTO.getTitle() != null ? postDTO.getTitle() : "null");
+//            log.info("Username: {}", postDTO.getAuthor() != null ? postDTO.getAuthor() : "null");
+//            log.info("Image Link: {}", postDTO.getThumbnail() != null ? postDTO.getThumbnail() : "null");
+//        });
+//        posts.forEach(post->{
+//            log.info(post);
+//        });
+        model.addAttribute("posts", responseDTO.getDtoList());
+        return "posting/list";
     }
 
-    @GetMapping("/register1") //등록
-    public void register1GET(){
+    /**
+     * 게시글 등록 페이지를 보여주는 메서드
+     */
+    @GetMapping("/register")
+    public void registerGET() {}
 
-    }
-    @PostMapping("/register1") //등록
-    public String register1Post(UploadFileDTO uploadFileDTO,
-                                PostDTO postDTO, BindingResult bindingResult,
-                                RedirectAttributes redirectAttributes) {
-        List<String> strFileNames=null;
-        if(uploadFileDTO.getFiles()!=null &&
-                !uploadFileDTO.getFiles().get(0).getOriginalFilename().equals("") ) {
-            strFileNames =fileUpload (uploadFileDTO);
-            log.info("!!!!!!!!!!!!!!!!"+strFileNames.size());
-        }
-        postDTO.setFileNames(strFileNames);
-        log.info("board POST register.......");
-//        if (bindingResult.hasErrors()) {
-//            log.info("has errors.......");
-//            redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
-//            return "redirect:/post/register1";
-//        }
+    /**
+     * 게시글 등록을 처리하는 메서드
+     */
+    @PostMapping("/register")
+    public String registerPost(UploadFileDTO uploadFileDTO, PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+        List<String> fileNames = uploadFiles(uploadFileDTO);
+        postDTO.setFileNames(fileNames);
 
-        log.info(postDTO);
         Long postId = postService.register(postDTO);
         redirectAttributes.addFlashAttribute("result", postId);
-        return "redirect:/post/list1";
-    }
-//     @GetMapping("/read1") //조회처리
-//        public void read1(Long postId, PageRequestDTO pageRequestDTO, Model model) {
-//            PostDTO postDTO = postService.readOne(postId);
-//            log.info(postDTO);
-//            model.addAttribute("dto", postDTO);
-//     }
 
-    @GetMapping({"/read1","/modify1"}) //게시물의 수정/삭제 처리
+        return "redirect:/posting/list";
+    }
+
+    /**
+     * 게시글 읽기 및 수정 페이지를 보여주는 메서드
+     */
+    @GetMapping({"/read", "/modify"})
     public void read(Long postId, PageRequestDTO pageRequestDTO, Model model) {
         PostDTO postDTO = postService.readOne(postId);
         log.info(postDTO);
         model.addAttribute("dto", postDTO);
     }
 
-    @PostMapping("/modify1") //수정처리
-    public String modify1 (PageRequestDTO pageRequestDTO,
-                           UploadFileDTO uploadFileDTO,
-                           @Valid PostDTO postDTO,
-                           BindingResult bindingResult,
-                           RedirectAttributes redirectAttributes) {
-
-        log.info("post modify1 post....." + postDTO);
-
-        List<String> strFileNames=null;
-        if(uploadFileDTO.getFiles()!=null &&
-                !uploadFileDTO.getFiles().get(0).getOriginalFilename().equals("") ){
-
-            List<String> fileNames = postDTO.getFileNames();
-
-            if(fileNames != null && fileNames.size() > 0){
-                removeFile(fileNames);
-            }
-
-            strFileNames=fileUpload(uploadFileDTO);
-            log.info("!!!!!!!!!!!!!!!!"+strFileNames.size());
-            postDTO.setFileNames(strFileNames);
-        }
+    /**
+     * 게시글 수정 처리를 위한 메서드
+     */
+    @PostMapping("/modify")
+    public String modify(PageRequestDTO pageRequestDTO, UploadFileDTO uploadFileDTO, @Valid PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            log.info("has errors.......");
-            String link = pageRequestDTO.getLink();
             redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
             redirectAttributes.addFlashAttribute("postId", postDTO.getPostId());
-            return "redirect:/post/modify1"+link;
+            return "redirect:/posting/modify" + pageRequestDTO.getLink();
         }
 
+        List<String> fileNames = uploadFiles(uploadFileDTO);
+        postDTO.setFileNames(fileNames);
+
         postService.modify(postDTO);
-        redirectAttributes.addFlashAttribute("result","modified");
+        redirectAttributes.addFlashAttribute("result", "modified");
         redirectAttributes.addFlashAttribute("postId", postDTO.getPostId());
-        return "redirect:/post/read1";
+
+        return "redirect:/posting/read";
     }
 
-    @PostMapping("/remove1") // 삭제처리
-    public String remove1(Long postId, RedirectAttributes redirectAttributes) {
-        log.info("post remove1 post....." + postId);
-
+    /**
+     * 게시글 삭제 처리를 위한 메서드
+     */
+    @PostMapping("/remove")
+    public String remove(Long postId, RedirectAttributes redirectAttributes) {
         postService.remove(postId);
-        redirectAttributes.addFlashAttribute("result","removed");
-        return "redirect:/post/list1";
+        redirectAttributes.addFlashAttribute("result", "removed");
+        return "redirect:/posting/list";
     }
 
-    private List<String> fileUpload(UploadFileDTO uploadFileDTO){
+    /**
+     * 파일 업로드 처리 메서드
+     * @param uploadFileDTO 업로드할 파일 정보
+     * @return 파일 이름 리스트
+     */
+    private List<String> uploadFiles(UploadFileDTO uploadFileDTO) {
+        List<String> fileNames = new ArrayList<>();
 
-        List<String> list = new ArrayList<>();
-        uploadFileDTO.getFiles().forEach(multipartFile -> {
-            String originalName = multipartFile.getOriginalFilename();
-            log.info(originalName);
+        if (uploadFileDTO.getFiles() != null) {
+            uploadFileDTO.getFiles().forEach(file -> {
+                String originalName = file.getOriginalFilename();
+                String uuid = UUID.randomUUID().toString();
+                Path savePath = Paths.get(uploadPath, uuid + "_" + originalName);
 
-            String uuid = UUID.randomUUID().toString();
-            Path savePath = Paths.get(uploadPath, uuid+"_"+ originalName);
-            boolean image = false;
-            try {
-                multipartFile.transferTo(savePath); // 서버에 파일저장
-                //이미지 파일의 종류라면
-                if(Files.probeContentType(savePath).startsWith("image")){
-                    image = true;
-                    File thumbFile = new File(uploadPath, "s_" + uuid+"_"+ originalName);
-                    Thumbnailator.createThumbnail(savePath.toFile(), thumbFile, 200,200);
+                try {
+                    file.transferTo(savePath);
+
+                    // 이미지 파일일 경우 썸네일 생성
+                    if (Files.probeContentType(savePath).startsWith("image")) {
+                        File thumbnailFile = new File(uploadPath, "s_" + uuid + "_" + originalName);
+                        Thumbnailator.createThumbnail(savePath.toFile(), thumbnailFile, 200, 200);
+                    }
+                    fileNames.add(uuid + "_" + originalName);
+                } catch (IOException e) {
+                    log.error("File upload error: {}", e.getMessage());
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            list.add(uuid+"_"+originalName);
-        });
-        return list;
+            });
+        }
+
+        return fileNames;
     }
 
+    /**
+     * 파일을 뷰로 보여주는 메서드
+     * @param fileName 파일 이름
+     * @return 파일에 대한 ResponseEntity
+     */
     @GetMapping("/view/{fileName}")
     @ResponseBody
-    public ResponseEntity<Resource> viewFileGet(@PathVariable("fileName") String fileName) {
+    public ResponseEntity<Resource> viewFile(@PathVariable("fileName") String fileName) {
         Resource resource = new FileSystemResource(uploadPath + File.separator + fileName);
-        String resourceName = resource.getFilename();
         HttpHeaders headers = new HttpHeaders();
 
-        try{
-            headers.add("Content-Type", Files.probeContentType( resource.getFile().toPath() ));
-        } catch(Exception e){
+        try {
+            headers.add("Content-Type", Files.probeContentType(resource.getFile().toPath()));
+        } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.ok().headers(headers).body(resource);
-    }
-
-    private void removeFile(List<String> fileNames){
-        log.info("AAAAA"+fileNames.size());
-
-        for(String fileName:fileNames){
-            log.info("fileRemove method: "+fileName);
-            Resource resource = new FileSystemResource(uploadPath+File.separator + fileName);
-            String resourceName = resource.getFilename();
-
-            // Map<String, Boolean> resultMap = new HashMap<>();
-            boolean removed = false;
-
-            try {
-                String contentType = Files.probeContentType(resource.getFile().toPath());
-                removed = resource.getFile().delete();
-
-                //섬네일이 존재한다면
-                if(contentType.startsWith("image")){
-                    String fileName1=fileName.replace("s_","");
-                    File originalFile = new File(uploadPath+File.separator + fileName1);
-                    originalFile.delete();
-                }
-
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
-        }
     }
 }

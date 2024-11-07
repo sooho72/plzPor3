@@ -54,6 +54,13 @@ public class Post extends BaseEntity {
     @BatchSize(size = 20)
     private Set<pPhoto> imageSet = Collections.synchronizedSet(new HashSet<>());
 
+    // 첫 번째 이미지 또는 랜덤 이미지를 가져오는 메서드
+    public String getThumbnail() {
+        return (imageSet != null && !imageSet.isEmpty())
+                ? imageSet.iterator().next().getLink()
+                : pPhoto.getRandomImage();
+    }
+
     // 이미지 추가 메서드
     public void addImage(String uuid, String fileName) {
         pPhoto image = pPhoto.builder()

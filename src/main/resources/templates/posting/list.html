@@ -32,22 +32,24 @@
       <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
         <div class="col mb-5" th:each="post : ${posts}">
           <div class="card h-100">
-            <img class="card-img-top" src="https://dummyimage.com/450x300/dee2e6/6c757d.jpg" alt="..."/>
+            <!-- 썸네일 이미지 -->
+            <a th:href="@{/posting/read/{postId}(postId=${post.postId})}">
+              <img class="card-img-top" th:src="${post.getThumbnail()}" alt="이미지"/>
+            </a>
             <div class="card-body p-4">
               <div class="text-center">
+                <!-- 게시글 제목 -->
                 <h5 class="fw-bolder" th:text="${post.title}"></h5>
-                <p th:text="${post.username}"></p>
+                <!-- 작성자 정보 -->
+                <p th:text="${post.author}"></p>
               </div>
             </div>
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-              <div class="text-center"
-                   th:attr="data-post-id=${post.postId},data-user-id=${post.userId}">
-                <button class="btn btn-outline-danger mt-auto"
-                        data-bs-toggle="modal" data-bs-target="#reportModal"
-                > <!-- 현재 로그인한 사용자 ID -->
+              <div class="text-center" th:attr="data-post-id=${post.postId},data-user-id=${post.userId}">
+                <button class="btn btn-outline-danger mt-auto" data-bs-toggle="modal" data-bs-target="#reportModal">
                   신고하기
                 </button>
-                <a class="btn btn-outline-dark mt-auto" th:href="@{/templates/posting/{postId}(postId=${post.postId})}">신청하기</a>
+                <a class="btn btn-outline-dark mt-auto" th:href="@{/posting/read/{postId}(postId=${post.postId})}">상세 보기</a>
               </div>
             </div>
           </div>
@@ -89,58 +91,39 @@
       </div>
     </div>
   </div>
+
   <script>
-    // 모달 열기 이벤트 리스너
+    // 신고하기 모달 열기 이벤트
     document.getElementById('reportModal').addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const postId = button.closest('.text-center').getAttribute('data-post-id');
 
-      const button = event.relatedTarget; // 클릭된 버튼
-      const postId = button.closest('.text-center').getAttribute('data-post-id'); // 부모 요소에서 data-post-id 가져오기
-
-      // 가져온 값 출력
-      console.log("Post ID:", postId);
-
-      // 신고하기 버튼 클릭 이벤트 리스너
       document.getElementById('submitReport').onclick = function () {
-        console.log('신고하기 버튼 클릭됨');
-
-        const category = document.getElementById('category').value; // 신고 유형
-        console.log("Selected category: ", category);
-        const reason = document.getElementById('reason').value; // 신고 사유
-
-        console.log("Sending report:", { postId, category, reason });
+        const category = document.getElementById('category').value;
+        const reason = document.getElementById('reason').value;
 
         fetch('/report/create', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json', // JSON 형식으로 전송
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ // JSON으로 직렬화하여 전송
-            postId: postId,
-            category: category,
-            reason: reason,
-          }),
+          body: JSON.stringify({ postId: postId, category: category, reason: reason }),
         })
                 .then(response => {
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
+                  if (!response.ok) throw new Error('Network response was not ok');
                   return response.text();
                 })
                 .then(data => {
-                  alert(data); // 성공 메시지 표시
-                  bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide(); // 모달 닫기
+                  alert(data);
+                  bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
                 })
                 .catch(error => {
                   console.error('Error:', error);
-                  alert('신고에 실패했습니다. 다시 시도해 주세요.'); // 실패 메시지 표시
+                  alert('신고에 실패했습니다. 다시 시도해 주세요.');
                 });
       };
     });
   </script>
-
 </div>
-
-
-
 </body>
 </html>
