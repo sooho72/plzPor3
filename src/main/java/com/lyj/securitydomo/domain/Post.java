@@ -6,7 +6,9 @@ import org.hibernate.annotations.BatchSize;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -54,11 +56,20 @@ public class Post extends BaseEntity {
     @BatchSize(size = 20)
     private Set<pPhoto> imageSet = Collections.synchronizedSet(new HashSet<>());
 
-    // 첫 번째 이미지 또는 랜덤 이미지를 가져오는 메서드
     public String getThumbnail() {
-        return (imageSet != null && !imageSet.isEmpty())
-                ? imageSet.iterator().next().getLink()
+        String thumbnailLink = (imageSet != null && !imageSet.isEmpty())
+                ? imageSet.iterator().next().getThumbnailLink() // 썸네일 링크를 가져옴
                 : pPhoto.getRandomImage();
+        return thumbnailLink;
+
+
+    }
+
+    public List<String> getOriginalImageLinks() {
+        return imageSet.stream()
+                .sorted()
+                .map(pPhoto::getOriginalLink) // 각 pPhoto의 원본 링크를 가져옴
+                .collect(Collectors.toList());
     }
 
     // 이미지 추가 메서드

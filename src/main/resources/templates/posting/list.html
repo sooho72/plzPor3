@@ -13,6 +13,13 @@
       background-color: #007bff;
       color: white;
     }
+    /* 카드 썸네일 이미지 */
+    .card-img-top {
+      width: 100%; /* 카드 너비에 맞춰 전체 너비 사용 */
+      height: auto; /* 높이는 자동으로 조절하여 비율 유지 */
+      max-height: 200px; /* 최대 높이를 설정하여 카드 크기 조절 */
+      object-fit: cover; /* 이미지 비율 유지 및 잘리도록 조정 */
+    }
   </style>
 </head>
 
@@ -34,7 +41,7 @@
           <div class="card h-100">
             <!-- 썸네일 이미지와 상세 페이지 링크 -->
             <a th:href="@{/posting/read/{postId}(postId=${post.postId})}" class="text-decoration-none">
-              <img class="card-img-top" th:src="${post.getThumbnail()}" alt="이미지"/>
+              <img class="card-img-top img-thumbnail" th:src="${post.getThumbnail()}" alt="이미지"/>
             </a>
             <div class="card-body p-4">
               <div class="text-center">

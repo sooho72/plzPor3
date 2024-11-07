@@ -18,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class PostController {
     @GetMapping("/list")
     public String list(PageRequestDTO pageRequestDTO, Model model) {
         PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
-        log.info(responseDTO);
+       // log.info(responseDTO);
         model.addAttribute("posts", responseDTO.getDtoList());
         return "posting/list";
     }
@@ -64,46 +65,35 @@ public class PostController {
      */
     @PostMapping("/register")
     public String registerPost(UploadFileDTO uploadFileDTO, PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-        List<String> fileNames = uploadFiles(uploadFileDTO);
-        postDTO.setFileNames(fileNames);
-
-        Long postId = postService.register(postDTO);
-        redirectAttributes.addFlashAttribute("result", postId);
-
+        try {
+            List<String> fileNames = uploadFiles(uploadFileDTO);
+            postDTO.setFileNames(fileNames);
+            Long postId = postService.register(postDTO);
+            redirectAttributes.addFlashAttribute("result", postId);
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "이미지 파일만 업로드 가능합니다.");
+            return "redirect:/posting/register"; // 등록 페이지로 리디렉션
+        }
         return "redirect:/posting/list";
     }
 
     /**
      * 게시글 읽기 및 수정 페이지를 보여주는 메서드
      */
-//    @GetMapping({"/read", "/modify"})
-//    public void read(Long postId, PageRequestDTO pageRequestDTO, Model model) {
-//        PostDTO postDTO = postService.readOne(postId);
-//        log.info(postDTO);
-//        model.addAttribute("dto", postDTO);
-//    }
-    //읽기만
     @GetMapping("/read/{postId}")
     public String read(@PathVariable Long postId, Model model) {
         PostDTO postDTO = postService.readOne(postId);
         log.info(postDTO);
         model.addAttribute("post", postDTO);
+        model.addAttribute("originalImages", postDTO.getOriginalImageLinks()); // 이미지 링크 추가
         return "posting/read"; // 상세보기 페이지
-    }
-    //수정만
-    @GetMapping("/modify/{postId}")
-    public String modify(@PathVariable Long postId, Model model) {
-        PostDTO postDTO = postService.readOne(postId);
-        log.info(postDTO);
-        model.addAttribute("dto", postDTO);
-        return "posting/modify"; // 수정 페이지
     }
 
     /**
      * 게시글 수정 처리를 위한 메서드
      */
     @PostMapping("/modify")
-    public String modify(PageRequestDTO pageRequestDTO, UploadFileDTO uploadFileDTO, @Valid PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String modify(PageRequestDTO pageRequestDTO, UploadFileDTO uploadFileDTO, @Valid PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) throws IOException {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
             redirectAttributes.addFlashAttribute("postId", postDTO.getPostId());
@@ -111,7 +101,6 @@ public class PostController {
         }
 
         List<String> fileNames = uploadFiles(uploadFileDTO);
-        postDTO.setFileNames(fileNames);
 
         postService.modify(postDTO);
         redirectAttributes.addFlashAttribute("result", "modified");
@@ -121,44 +110,36 @@ public class PostController {
     }
 
     /**
-     * 게시글 삭제 처리를 위한 메서드
-     */
-    @PostMapping("/remove")
-    public String remove(Long postId, RedirectAttributes redirectAttributes) {
-        postService.remove(postId);
-        redirectAttributes.addFlashAttribute("result", "removed");
-        return "redirect:/posting/list";
-    }
-
-    /**
      * 파일 업로드 처리 메서드
      * @param uploadFileDTO 업로드할 파일 정보
      * @return 파일 이름 리스트
      */
-    private List<String> uploadFiles(UploadFileDTO uploadFileDTO) {
+    private List<String> uploadFiles(UploadFileDTO uploadFileDTO) throws IOException {
         List<String> fileNames = new ArrayList<>();
 
         if (uploadFileDTO.getFiles() != null) {
-            uploadFileDTO.getFiles().forEach(file -> {
+            for (MultipartFile file : uploadFileDTO.getFiles()) {
                 String originalName = file.getOriginalFilename();
                 String uuid = UUID.randomUUID().toString();
                 Path savePath = Paths.get(uploadPath, uuid + "_" + originalName);
 
-                try {
-                    file.transferTo(savePath);
+                // 파일을 지정된 경로에 저장
+                file.transferTo(savePath);
 
+                // 이미지 파일인지 확인
+                String contentType = Files.probeContentType(savePath);
+                if (contentType != null && contentType.startsWith("image")) {
                     // 이미지 파일일 경우 썸네일 생성
-                    if (Files.probeContentType(savePath).startsWith("image")) {
-                        File thumbnailFile = new File(uploadPath, "s_" + uuid + "_" + originalName);
-                        Thumbnailator.createThumbnail(savePath.toFile(), thumbnailFile, 200, 200);
-                    }
-                    fileNames.add(uuid + "_" + originalName);
-                } catch (IOException e) {
-                    log.error("File upload error: {}", e.getMessage());
+                    File thumbnailFile = new File(uploadPath, "s_" + uuid + "_" + originalName);
+                    Thumbnailator.createThumbnail(savePath.toFile(), thumbnailFile, 200, 200);
+                    fileNames.add("s_" + uuid + "_" + originalName); // 썸네일 이름 추가
+                    fileNames.add(uuid + "_" + originalName); // 원본 파일 이름 추가
+                } else {
+                    // 이미지 파일이 아닐 경우 예외 발생
+                    throw new IOException("Uploaded file is not an image: " + originalName);
                 }
-            });
+            }
         }
-
         return fileNames;
     }
 

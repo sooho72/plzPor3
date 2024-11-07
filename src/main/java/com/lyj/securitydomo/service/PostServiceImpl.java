@@ -8,7 +8,6 @@ import com.lyj.securitydomo.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,12 +20,9 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
-    private final ModelMapper modelMapper;
-
-    private final PostRepository postRepository;
-
     @Override
     public Long register(PostDTO postDTO) {
+        // 1. Post 엔티티 생성
         Post post = Post.builder()
                 .title(postDTO.getTitle())
                 .contentText(postDTO.getContentText())
@@ -34,6 +30,7 @@ public class PostServiceImpl implements PostService {
                 .status(postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : null)
                 .build();
 
+        // 2. 파일 정보 추가
         if (postDTO.getFileNames() != null) {
             postDTO.getFileNames().forEach(fileName -> {
                 String[] split = fileName.split("_");
@@ -42,8 +39,12 @@ public class PostServiceImpl implements PostService {
                 }
             });
         }
+
+        // 3. Post 엔티티를 저장 (연관된 pPhoto 엔티티도 함께 저장됨)
         return postRepository.save(post).getPostId();
     }
+    private final PostRepository postRepository;
+
 
     @Override
     public PostDTO readOne(Long postId) {
@@ -89,7 +90,6 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResponseDTO<PostDTO> list(PageRequestDTO pageRequestDTO) {
-
         String[] types = pageRequestDTO.getTypes();
         String keyword = pageRequestDTO.getKeyword();
         Pageable pageable = pageRequestDTO.getPageable("postId");
@@ -97,8 +97,21 @@ public class PostServiceImpl implements PostService {
         Page<Post> result = postRepository.searchAll(types, keyword, pageable);
 
         List<PostDTO> dtoList = result.getContent().stream()
-                .map(post -> modelMapper.map(post, PostDTO.class)).collect(Collectors.toList());
-
+                .map(post -> PostDTO.builder()
+                        .postId(post.getPostId())
+                        .title(post.getTitle())
+                        .contentText(post.getContentText())
+                        .createdAt(post.getCreatedAt())
+                        .updatedAt(post.getUpDatedAt())
+                        .fileNames(post.getImageSet().stream()
+                                .map(image -> image.getUuid() + "_" + image.getFileName())
+                                .collect(Collectors.toList()))
+                        .requiredParticipants(post.getRequiredParticipants())
+                        .status(post.getStatus() != null ? post.getStatus().name() : null)
+                        .author(post.getUser() != null ? post.getUser().getUsername() : null)
+                        .build()
+                )
+                .collect(Collectors.toList());
 
         return PageResponseDTO.<PostDTO>withAll()
                 .pageRequestDTO(pageRequestDTO)
@@ -107,35 +120,3 @@ public class PostServiceImpl implements PostService {
                 .build();
     }
 }
-//        String[] types = Optional.ofNullable(pageRequestDTO.getTypes()).orElse(new String[0]);
-//        String keyword = pageRequestDTO.getKeyword();
-//        Pageable pageable = pageRequestDTO.getPageable("postId");
-//
-//        Page<Post> result = postRepository.searchAll(List.of(types), keyword, pageable);
-//        log.info("서비스 결과: " + result);
-
-//        // Entity에서 직접 DTO로 변환
-//        List<PostDTO> dtoList = result.getContent().stream()
-//                .map(post -> PostDTO.builder()
-//                        .postId(post.getPostId())
-//                        .title(post.getTitle())
-//                        .contentText(post.getContentText())
-//                        .createdAt(post.getCreatedAt())
-//                        .updatedAt(post.getUpDatedAt())
-//                        .fileNames(post.getImageSet().stream()
-//                                .map(image -> image.getUuid() + "_" + image.getFileName())
-//                                .collect(Collectors.toList()))
-//                        .requiredParticipants(post.getRequiredParticipants())
-//                        .status(post.getStatus() != null ? post.getStatus().name() : null)
-//                        .author(post.getUser() != null ? post.getUser().getUsername() : null)
-//                        .build()
-//                )
-//                .collect(Collectors.toList());
-
-//        // PageResponseDTO에 dtoList와 total 전달
-//        return PageResponseDTO.<PostDTO>builder()
-//                .pageRequestDTO(pageRequestDTO)
-//                .dtoList(dtoList) // dtoList 변수 전달
-//                .total((int) result.getTotalElements())
-//                .build();
-//    }

@@ -30,15 +30,14 @@ public class PostDTO {
 
     private Date updatedAt; // 수정 날짜
 
-    private List<String> fileNames; // 파일 이름 리스트
+    private List<String> fileNames; // 파일 이름 리스트 (썸네일 및 원본 파일 이름을 저장)
 
     private Integer requiredParticipants; // 모집 인원
 
     private String status; // 모집 상태 (모집중 또는 모집완료)
 
     private String author; // 작성자 정보
-
-    private UploadResultDTO uploadResult; // 이미지 관련 정보 관리
+    private List<String> originalImageLinks;
 
     /**
      * 썸네일 이미지 링크를 가져오는 메서드입니다.
@@ -47,8 +46,15 @@ public class PostDTO {
      * @return 이미지 링크
      */
     public String getThumbnail() {
-        return (uploadResult != null && uploadResult.getLink() != null)
-                ? uploadResult.getLink()
-                : UploadResultDTO.getRandomImage();
+        // fileNames가 null이거나 비어있지 않다면 첫 번째 이미지(썸네일) 링크를 반환
+        if (fileNames != null && !fileNames.isEmpty()) {
+            return "/view/s_" + fileNames.get(0);
+        } else {
+            return UploadResultDTO.getRandomImage();
+        }
+    }
+    public List<String> getOriginalImageLinks() {
+        // 필요하다면 파일 링크 로직을 작성해 추가합니다.
+        return this.originalImageLinks;
     }
 }
