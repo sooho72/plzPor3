@@ -76,11 +76,27 @@ public class PostController {
     /**
      * 게시글 읽기 및 수정 페이지를 보여주는 메서드
      */
-    @GetMapping({"/read", "/modify"})
-    public void read(Long postId, PageRequestDTO pageRequestDTO, Model model) {
+//    @GetMapping({"/read", "/modify"})
+//    public void read(Long postId, PageRequestDTO pageRequestDTO, Model model) {
+//        PostDTO postDTO = postService.readOne(postId);
+//        log.info(postDTO);
+//        model.addAttribute("dto", postDTO);
+//    }
+    //읽기만
+    @GetMapping("/read/{postId}")
+    public String read(@PathVariable Long postId, Model model) {
+        PostDTO postDTO = postService.readOne(postId);
+        log.info(postDTO);
+        model.addAttribute("post", postDTO);
+        return "posting/read"; // 상세보기 페이지
+    }
+    //수정만
+    @GetMapping("/modify/{postId}")
+    public String modify(@PathVariable Long postId, Model model) {
         PostDTO postDTO = postService.readOne(postId);
         log.info(postDTO);
         model.addAttribute("dto", postDTO);
+        return "posting/modify"; // 수정 페이지
     }
 
     /**

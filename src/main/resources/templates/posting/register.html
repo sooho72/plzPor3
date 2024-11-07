@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/basic.html}">
 
-<body>
-<div class="post-form" layout:fragment="content">
+<div class="post-form">
   <form action="/posting/register" method="post" enctype="multipart/form-data">
     <div>
       <label for="title">제목</label>
@@ -21,5 +16,3 @@
     <button type="submit">등록</button>
   </form>
 </div>
-</body>
-</html>
