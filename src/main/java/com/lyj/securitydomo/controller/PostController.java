@@ -53,20 +53,6 @@ public class PostController {
         });
 
 
-
-        // DTO 리스트가 null인 경우 빈 리스트로 처리
-//        List<PostDTO> posts = Optional.ofNullable(responseDTO.getDtoList()).orElse(new ArrayList<>());
-
-        // DTO 리스트 로그 출력
-//        posts.forEach(postDTO -> {
-//            log.info("PostDTO ID: {}", postDTO.getPostId() != null ? postDTO.getPostId() : "null");
-//            log.info("Title: {}", postDTO.getTitle() != null ? postDTO.getTitle() : "null");
-//            log.info("Username: {}", postDTO.getAuthor() != null ? postDTO.getAuthor() : "null");
-//            log.info("Image Link: {}", postDTO.getThumbnail() != null ? postDTO.getThumbnail() : "null");
-//        });
-//        posts.forEach(post->{
-//            log.info(post);
-//        });
         model.addAttribute("posts", responseDTO.getDtoList());
         return "posting/list";
     }

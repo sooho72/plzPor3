@@ -29,6 +29,7 @@ public class CustomSecurityConfig {
                         .requestMatchers("/login", "/sinup", "/user/**", "/", "/all", "/posting/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/report/create").permitAll() // 신고하기 URL 허용
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/images/**", "/css/**", "/js/**", "/webjars/**").permitAll()// 정적 리소스 허용
                         .anyRequest().authenticated())
                 .formLogin(formLoginConfigurer -> formLoginConfigurer
                         .loginPage("/user/login")
