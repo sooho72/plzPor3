@@ -8,12 +8,12 @@ import com.lyj.securitydomo.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
+    private final ModelMapper modelMapper;
+
     private final PostRepository postRepository;
 
     @Override
@@ -87,36 +89,53 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResponseDTO<PostDTO> list(PageRequestDTO pageRequestDTO) {
-        String[] types = Optional.ofNullable(pageRequestDTO.getTypes()).orElse(new String[0]);
+
+        String[] types = pageRequestDTO.getTypes();
         String keyword = pageRequestDTO.getKeyword();
         Pageable pageable = pageRequestDTO.getPageable("postId");
 
-        Page<Post> result = postRepository.searchAll(List.of(types), keyword, pageable);
-        log.info("서비스 결과: " + result);
+        Page<Post> result = postRepository.searchAll(types, keyword, pageable);
 
-        // Entity에서 직접 DTO로 변환
         List<PostDTO> dtoList = result.getContent().stream()
-                .map(post -> PostDTO.builder()
-                        .postId(post.getPostId())
-                        .title(post.getTitle())
-                        .contentText(post.getContentText())
-                        .createdAt(post.getCreatedAt())
-                        .updatedAt(post.getUpDatedAt())
-                        .fileNames(post.getImageSet().stream()
-                                .map(image -> image.getUuid() + "_" + image.getFileName())
-                                .collect(Collectors.toList()))
-                        .requiredParticipants(post.getRequiredParticipants())
-                        .status(post.getStatus() != null ? post.getStatus().name() : null)
-                        .author(post.getUser() != null ? post.getUser().getUsername() : null)
-                        .build()
-                )
-                .collect(Collectors.toList());
+                .map(post -> modelMapper.map(post, PostDTO.class)).collect(Collectors.toList());
 
-        // PageResponseDTO에 dtoList와 total 전달
-        return PageResponseDTO.<PostDTO>builder()
+
+        return PageResponseDTO.<PostDTO>withAll()
                 .pageRequestDTO(pageRequestDTO)
-                .dtoList(dtoList) // dtoList 변수 전달
+                .dtoList(dtoList)
                 .total((int) result.getTotalElements())
                 .build();
     }
 }
+//        String[] types = Optional.ofNullable(pageRequestDTO.getTypes()).orElse(new String[0]);
+//        String keyword = pageRequestDTO.getKeyword();
+//        Pageable pageable = pageRequestDTO.getPageable("postId");
+//
+//        Page<Post> result = postRepository.searchAll(List.of(types), keyword, pageable);
+//        log.info("서비스 결과: " + result);
+
+//        // Entity에서 직접 DTO로 변환
+//        List<PostDTO> dtoList = result.getContent().stream()
+//                .map(post -> PostDTO.builder()
+//                        .postId(post.getPostId())
+//                        .title(post.getTitle())
+//                        .contentText(post.getContentText())
+//                        .createdAt(post.getCreatedAt())
+//                        .updatedAt(post.getUpDatedAt())
+//                        .fileNames(post.getImageSet().stream()
+//                                .map(image -> image.getUuid() + "_" + image.getFileName())
+//                                .collect(Collectors.toList()))
+//                        .requiredParticipants(post.getRequiredParticipants())
+//                        .status(post.getStatus() != null ? post.getStatus().name() : null)
+//                        .author(post.getUser() != null ? post.getUser().getUsername() : null)
+//                        .build()
+//                )
+//                .collect(Collectors.toList());
+
+//        // PageResponseDTO에 dtoList와 total 전달
+//        return PageResponseDTO.<PostDTO>builder()
+//                .pageRequestDTO(pageRequestDTO)
+//                .dtoList(dtoList) // dtoList 변수 전달
+//                .total((int) result.getTotalElements())
+//                .build();
+//    }

@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 
@@ -43,16 +42,13 @@ public class PostController {
 
     /**
      * 게시글 목록을 조회하고 모델에 전달하는 메서드
+     *
+     * @return
      */
     @GetMapping("/list")
     public String list(PageRequestDTO pageRequestDTO, Model model) {
         PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
-
-        responseDTO.getDtoList().forEach(postDTO -> {
-            log.info(postDTO.toString());
-        });
-
-
+        log.info(responseDTO);
         model.addAttribute("posts", responseDTO.getDtoList());
         return "posting/list";
     }
