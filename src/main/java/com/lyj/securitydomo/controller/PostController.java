@@ -68,6 +68,7 @@ public class PostController {
         try {
             List<String> fileNames = uploadFiles(uploadFileDTO);
             postDTO.setFileNames(fileNames);
+
             Long postId = postService.register(postDTO);
             redirectAttributes.addFlashAttribute("result", postId);
         } catch (IOException e) {

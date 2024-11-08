@@ -1,3 +1,4 @@
+
 package com.lyj.securitydomo.service;
 
 import com.lyj.securitydomo.domain.Post;
@@ -28,6 +29,8 @@ public class PostServiceImpl implements PostService {
                 .contentText(postDTO.getContentText())
                 .requiredParticipants(postDTO.getRequiredParticipants())
                 .status(postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : null)
+                .lng(postDTO.getLng()) // 위도 추가
+                .lat(postDTO.getLat()) // 경도 추가
                 .build();
 
         // 2. 파일 정보 추가

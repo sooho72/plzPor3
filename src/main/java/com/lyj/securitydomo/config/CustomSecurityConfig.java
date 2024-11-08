@@ -23,12 +23,11 @@ public class CustomSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable())
-                .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.disable())
                 .authorizeHttpRequests(authorizeHttpRequestsConfigurer -> authorizeHttpRequestsConfigurer
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                         .requestMatchers("/login", "/sinup", "/user/**", "/", "/all", "/posting/**","/view/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/report/create").permitAll() // 신고하기 URL 허용
-                        .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/**").hasAuthority("ADMIN") //관리자 권한 설정
                         .requestMatchers("/images/**", "/css/**", "/js/**", "/webjars/**").permitAll()// 정적 리소스 허용
                         .anyRequest().authenticated())
                 .formLogin(formLoginConfigurer -> formLoginConfigurer

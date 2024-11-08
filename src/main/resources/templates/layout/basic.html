@@ -21,22 +21,25 @@
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     <li sec:authorize="isAuthenticated()" class="nav-item">
-                        <a class="nav-link" href="/post/view">Board List</a>
+                        <a class="nav-link" href="/posting/list">Board List</a>
                     </li>
+                    <li sec:authorize="isAuthenticated()" class="nav-item">
+                    <a class="nav-link" href="/posting/register">Register</a>
+                </li>
                     <li sec:authorize="hasAnyAuthority('USER')" class="nav-item">
                         <a class="nav-link" href="/User">User</a>
                     </li>
                     <li sec:authorize="hasAnyAuthority('ADMIN')" class="nav-item">
-                        <a class="nav-link" href="/admin/admin_index">Admin</a>
+                        <a class="nav-link" href="/admin/AdminIndex">Admin</a>
                     </li>
                     <li sec:authorize="!isAuthenticated()" class="nav-item">
                         <a class="nav-link" href="/user/login">Login</a>
                     </li>
                     <li sec:authorize="hasAnyAuthority('ADMIN')" class="nav-item">
-                        <a class="nav-link" href="/admin/admin_index">Reports</a>
+                        <a class="nav-link" href="/admin/reportList">Reports</a>
                     </li>
                     <li sec:authorize="hasAnyAuthority('ADMIN')" class="nav-item">
-                        <a class="nav-link" href="/admin/admin_index">Users</a>
+                        <a class="nav-link" href="/admin/users">Users</a>
                     </li>
                     <li sec:authorize="isAuthenticated()" class="nav-item">
                         <a class="nav-link" href="/logout">Logout ([[${#authentication.principal.username}]])</a>

@@ -8,25 +8,28 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Log4j2
 public class SampleController {
     @GetMapping("/")
-    public String home(){
+    public String home() {
         log.info("home");
-        return "index";
+        return "index"; // index.html로 이동
     }
+
     //@GetMapping("/user/login")
-    public void login(){
+    public void login() {
         log.info("login");
     }
-    @GetMapping("/all")
-    public String exAll(){
-        log.info("exAll");
-        return "exAll";
-    }
-    @GetMapping("/member")
-    public void exMember(){
 
+    @GetMapping("/all")
+    public String exAll() {
+        log.info("exAll");
+        return "exAll"; // exAll.html로 이동
+    }
+
+    @GetMapping("/member")
+    public void exMember() {
         log.info("exMember");
     }
-    @GetMapping("/admin")
+
+    @GetMapping("sample/admin")
     public void exAdmin() {
 
         log.info("exAdmin");
