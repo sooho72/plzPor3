@@ -35,6 +35,9 @@
 
   <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
+      <div th:if="${error}" class="alert alert-danger" role="alert">
+        <p th:text="${error}"></p>
+      </div>
       <form th:action="@{/posting/register}" method="post" enctype="multipart/form-data">
         <div class="mb-3">
           <label for="title" class="form-label">제목</label>
@@ -74,6 +77,24 @@
   </section>
 
   <script>
+
+    document.querySelector('form').addEventListener('submit', function(event) {
+      // 폼이 제출되기 전에 데이터를 콘솔에 출력
+      const title = document.getElementById('title').value;
+      const contentText = document.getElementById('contentText').value;
+      const requiredParticipants = document.getElementById('requiredParticipants').value;
+      const latitude = document.getElementById('latitude').value;
+      const longitude = document.getElementById('longitude').value;
+
+      console.log("게시글 정보:");
+      console.log("제목:", title);
+      console.log("내용:", contentText);
+      console.log("모집 인원:", requiredParticipants);
+      console.log("위도:", latitude);
+      console.log("경도:", longitude);
+    });
+
+
     var map;
     var infoWindow;
 

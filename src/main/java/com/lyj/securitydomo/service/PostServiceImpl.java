@@ -2,6 +2,7 @@
 package com.lyj.securitydomo.service;
 
 import com.lyj.securitydomo.domain.Post;
+import com.lyj.securitydomo.domain.pPhoto;
 import com.lyj.securitydomo.dto.PageRequestDTO;
 import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
@@ -29,26 +30,34 @@ public class PostServiceImpl implements PostService {
                 .contentText(postDTO.getContentText())
                 .requiredParticipants(postDTO.getRequiredParticipants())
                 .status(postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : null)
-                .lng(postDTO.getLng()) // 위도 추가
-                .lat(postDTO.getLat()) // 경도 추가
+                .lat(postDTO.getLat()) // 위도 추가
+                .lng(postDTO.getLng()) // 경도 추가
                 .build();
 
-        // 2. 파일 정보 추가
-        if (postDTO.getFileNames() != null) {
+        // 2. 파일 정보 추가 (파일이 존재하는 경우에만 추가)
+        if (postDTO.getFileNames() != null && !postDTO.getFileNames().isEmpty()) {
             postDTO.getFileNames().forEach(fileName -> {
                 String[] split = fileName.split("_");
                 if (split.length == 2) {
                     post.addImage(split[0], split[1]);
                 }
             });
+        } else {
+            // 파일이 없을 경우 랜덤 이미지 추가
+            String randomImage = pPhoto.getRandomImage(); // pPhoto에서 랜덤 이미지 가져오기
+            post.addImage(randomImage, randomImage); // 랜덤 이미지를 파일 이름으로 사용
+            log.info("파일이 없어서 랜덤 이미지를 사용합니다: {}", randomImage); // 로그 추가
+
         }
-
         // 3. Post 엔티티를 저장 (연관된 pPhoto 엔티티도 함께 저장됨)
-        return postRepository.save(post).getPostId();
+        Long postId = postRepository.save(post).getPostId();
+        log.info("게시글이 성공적으로 등록되었습니다. ID: {}", postId);
+
+        return postId;
     }
+
+
     private final PostRepository postRepository;
-
-
     @Override
     public PostDTO readOne(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow();

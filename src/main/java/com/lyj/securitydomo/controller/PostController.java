@@ -1,5 +1,6 @@
 package com.lyj.securitydomo.controller;
 
+import com.lyj.securitydomo.domain.pPhoto;
 import com.lyj.securitydomo.dto.PageRequestDTO;
 import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
@@ -48,10 +49,17 @@ public class PostController {
      */
     @GetMapping("/list")
     public String list(PageRequestDTO pageRequestDTO, Model model) {
+        // size가 유효하지 않은 경우 기본값으로 설정
+        if (pageRequestDTO.getSize() <= 0) {
+            pageRequestDTO.setSize(10); // 기본값 설정
+        }
         PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
-       // log.info(responseDTO);
-        model.addAttribute("posts", responseDTO.getDtoList());
-        return "posting/list";
+
+        model.addAttribute("posts", responseDTO.getDtoList()); // 게시글 DTO 리스트 추가
+        model.addAttribute("totalPages", (int) Math.ceil(responseDTO.getTotal() / (double) pageRequestDTO.getSize())); // 총 페이지 수 계산
+        model.addAttribute("currentPage", responseDTO.getPage()); // 현재 페이지 추가
+
+        return "posting/list"; // 게시글 목록 뷰 반환
     }
 
     /**
@@ -66,18 +74,34 @@ public class PostController {
     @PostMapping("/register")
     public String registerPost(UploadFileDTO uploadFileDTO, PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         try {
-            List<String> fileNames = uploadFiles(uploadFileDTO);
-            postDTO.setFileNames(fileNames);
+            List<String> fileNames = new ArrayList<>();
+            if (uploadFileDTO.getFiles() != null && uploadFileDTO.getFiles().size() > 0) {
+                // 파일이 있을 경우에만 업로드
+                fileNames = uploadFiles(uploadFileDTO);
+            } else {
+                // 파일이 없으면 랜덤 이미지 사용
+                String randomImage = pPhoto.getRandomImage(); // pPhoto에서 랜덤 이미지 가져오기
+                fileNames.add(randomImage); // 랜덤 이미지를 fileNames 리스트에 추가
+                log.info("파일이 업로드되지 않았습니다. 랜덤 이미지를 사용합니다: {}", randomImage); // 로그 추가
+            }
 
-            Long postId = postService.register(postDTO);
-            redirectAttributes.addFlashAttribute("result", postId);
+            postDTO.setFileNames(fileNames); // 파일 이름 설정
+
+            Long postId = postService.register(postDTO); // 게시글 등록
+
+            if (postId == null) {
+                redirectAttributes.addFlashAttribute("error", "게시글 등록에 실패했습니다."); // 등록 실패 알림
+                return "redirect:/posting/register"; // 등록 페이지로 리디렉션
+            }
+
+            redirectAttributes.addFlashAttribute("result", postId); // 성공적으로 등록된 ID
+            log.info("게시글이 성공적으로 등록되었습니다. ID: {}", postId); // 로그 추가
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", "이미지 파일만 업로드 가능합니다.");
+            redirectAttributes.addFlashAttribute("error", "이미지 파일만 업로드 가능합니다."); // 오류 알림
             return "redirect:/posting/register"; // 등록 페이지로 리디렉션
         }
-        return "redirect:/posting/list";
+        return "redirect:/posting/list"; // 리스트 페이지로 리디렉션
     }
-
     /**
      * 게시글 읽기 및 수정 페이지를 보여주는 메서드
      */
@@ -118,11 +142,19 @@ public class PostController {
     private List<String> uploadFiles(UploadFileDTO uploadFileDTO) throws IOException {
         List<String> fileNames = new ArrayList<>();
 
-        if (uploadFileDTO.getFiles() != null) {
+        if (uploadFileDTO.getFiles() != null && uploadFileDTO.getFiles().size() > 0) {
             for (MultipartFile file : uploadFileDTO.getFiles()) {
                 String originalName = file.getOriginalFilename();
                 String uuid = UUID.randomUUID().toString();
                 Path savePath = Paths.get(uploadPath, uuid + "_" + originalName);
+
+                // 파일이 비어있지 않은지 확인
+                if (file.isEmpty()) {
+                    // 비어있는 경우 랜덤 이미지를 추가
+                    String randomImage = pPhoto.getRandomImage();
+                    fileNames.add(randomImage); // 랜덤 이미지를 파일 이름에 추가
+                    continue; // 다음 파일로 넘어감
+                }
 
                 // 파일을 지정된 경로에 저장
                 file.transferTo(savePath);
@@ -140,6 +172,10 @@ public class PostController {
                     throw new IOException("Uploaded file is not an image: " + originalName);
                 }
             }
+        } else {
+            // 파일이 아예 없을 경우 랜덤 이미지를 추가
+            String randomImage = pPhoto.getRandomImage();
+            fileNames.add(randomImage); // 랜덤 이미지를 파일 이름에 추가
         }
         return fileNames;
     }
