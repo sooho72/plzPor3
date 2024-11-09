@@ -2,6 +2,8 @@ package com.lyj.securitydomo.controller;
 
 import com.lyj.securitydomo.dto.ReportDTO;
 import com.lyj.securitydomo.service.ReportService;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/report")
+@Log4j2
 public class ReportController {
 
     private final ReportService reportService;
@@ -37,11 +40,18 @@ public ResponseEntity<String> createReport(@RequestBody ReportDTO reportDTO) {
     return ResponseEntity.ok("신고가 접수되었습니다."); // 여기서 문자열 응답
 }
 
-    // 신고 리스트 조회를 위한 엔드포인트
-    @GetMapping("/list")
-    public ResponseEntity<List<ReportDTO>> getReports() {
-        List<ReportDTO> reports = reportService.getAllReports(); // 모든 신고 리스트 가져오기
-        return ResponseEntity.ok(reports); // 조회된 리스트 반환
-    }
+//    @GetMapping("/list")
+//    public ResponseEntity<List<ReportDTO>> getReports() {
+//        try {
+//            List<ReportDTO> reports = reportService.getAllReports(); // 모든 신고 리스트 가져오기
+//            if (reports.isEmpty()) {
+//                return ResponseEntity.noContent().build(); // 신고 리스트가 비어있을 경우 204 반환
+//            }
+//            return ResponseEntity.ok(reports); // 조회된 리스트 반환
+//        } catch (Exception e) {
+//            log.error("Error retrieving report list", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 오류 반환
+//        }
+//    }
 
 }

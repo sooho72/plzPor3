@@ -100,9 +100,17 @@
 
     function initializeMap() {
       map = new naver.maps.Map("map", {
-        center: new naver.maps.LatLng(37.3595316, 127.1052133),
+        center: new naver.maps.LatLng(37.3595316, 127.1052133),//지도 초기 좌표
         zoom: 15,
-        mapTypeControl: true
+        minZoom: 8,
+        mapTypeControl: true,
+        zoomControl: true, //줌 컨트롤의 표시 여부
+        zoomControlOptions: { //줌 컨트롤의 옵션
+          position: naver.maps.Position.TOP_RIGHT
+        }});
+      var marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(337.3595316, 127.1052133),
+        map: map
       });
 
       infoWindow = new naver.maps.InfoWindow({

@@ -30,7 +30,7 @@
                         <a class="nav-link" href="/User">User</a>
                     </li>
                     <li sec:authorize="hasAnyAuthority('ADMIN')" class="nav-item">
-                        <a class="nav-link" href="/admin/AdminIndex">Admin</a>
+                        <a class="nav-link" href="/admin/adminIndex">Admin</a>
                     </li>
                     <li sec:authorize="!isAuthenticated()" class="nav-item">
                         <a class="nav-link" href="/user/login">Login</a>

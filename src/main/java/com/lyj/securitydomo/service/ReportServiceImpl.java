@@ -50,9 +50,43 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<ReportDTO> getAllReports() {
-        List<Report> reports = reportRepository.findAll(); // 모든 신고를 가져옴
+        List<Report> reports = reportRepository.findAll();
+        if (reports.isEmpty()) {
+            log.warn("No reports found.");
+        }
+
+        List<ReportDTO> reportDTOList = reports.stream()
+                .map(report -> modelMapper.map(report, ReportDTO.class))
+                .collect(Collectors.toList());
+
+        log.info("All Reports: {}", reportDTOList); // 변환된 ReportDTO 리스트 로그 출력
+        return reportDTOList;
+    }
+
+    @Override
+    public List<ReportDTO> getReportsInProgress() {
+        List<Report> reports = reportRepository.findByStatus(Report.ReportStatus.PENDING);
+        if (reports.isEmpty()) {
+            log.warn("No reports in progress.");
+        }
+
+        List<ReportDTO> reportDTOList = reports.stream()
+                .map(report -> modelMapper.map(report, ReportDTO.class))
+                .collect(Collectors.toList());
+
+        log.info("Reports in Progress: {}", reportDTOList); // 변환된 ReportDTO 리스트 로그 출력
+        return reportDTOList;
+    }
+
+    @Override
+    public List<ReportDTO> getReportsByPostId(Long postId) {
+        List<Report> reports = reportRepository.findByPost_PostId(postId); // 특정 postId에 대한 신고 목록을 가져옴
+        if (reports.isEmpty()) {
+            log.warn("No reports found for postId: {}", postId);
+        }
+
         return reports.stream()
-                .map(report -> modelMapper.map(report, ReportDTO.class)) // Report 엔티티를 ReportDTO로 변환
+                .map(report -> modelMapper.map(report, ReportDTO.class))
                 .collect(Collectors.toList());
     }
 }

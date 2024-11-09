@@ -1,5 +1,7 @@
 package com.lyj.securitydomo.dto;
 
+import com.lyj.securitydomo.domain.Post;
+import com.lyj.securitydomo.service.PostService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +20,6 @@ public class ReportDTO {
     private String status; // 신고 진행 상태
     private String category; // 신고 분류
     private Date createdAt; // 생성 날짜
+
+
 }

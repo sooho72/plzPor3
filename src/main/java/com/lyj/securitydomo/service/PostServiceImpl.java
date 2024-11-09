@@ -95,11 +95,16 @@ public class PostServiceImpl implements PostService {
         postRepository.save(post);
     }
 
+
+
+    //삭제
     @Override
     public void remove(Long postId) {
         postRepository.deleteById(postId);
     }
 
+
+    //페이징
     @Override
     public PageResponseDTO<PostDTO> list(PageRequestDTO pageRequestDTO) {
         String[] types = pageRequestDTO.getTypes();
@@ -131,4 +136,6 @@ public class PostServiceImpl implements PostService {
                 .total((int) result.getTotalElements())
                 .build();
     }
+
+
 }
