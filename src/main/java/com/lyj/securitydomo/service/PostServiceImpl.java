@@ -7,6 +7,7 @@ import com.lyj.securitydomo.dto.PageRequestDTO;
 import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
 import com.lyj.securitydomo.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -60,7 +61,12 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     @Override
     public PostDTO readOne(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow();
+        // 게시글을 조회할 때, isVisible이 true인 경우에만 반환
+        // findById로 게시글을 찾고, isVisible이 true인 게시글만 필터링
+        Post post = postRepository.findById(postId)
+                .filter(p -> p.isVisible()) // isVisible이 true인 게시글만 필터링
+                .orElseThrow(() -> new EntityNotFoundException("Post not found or post is invisible"));
+
 
         return PostDTO.builder()
                 .postId(post.getPostId())
@@ -111,31 +117,51 @@ public class PostServiceImpl implements PostService {
         String keyword = pageRequestDTO.getKeyword();
         Pageable pageable = pageRequestDTO.getPageable("postId");
 
-        Page<Post> result = postRepository.searchAll(types, keyword, pageable);
+        // isVisible이 true인 게시글만 조회
+        Page<Post> result = postRepository.findByIsVisibleTrue(pageable);  // isVisible이 true인 게시글만 조회
 
+        // 조회된 게시글 수 로그로 출력
+        log.info("조회된 게시글 수: {}", result.getTotalElements());
+
+        // 게시글 정보를 PostDTO로 변환하여 리스트에 담음
         List<PostDTO> dtoList = result.getContent().stream()
                 .map(post -> PostDTO.builder()
-                        .postId(post.getPostId())
-                        .title(post.getTitle())
-                        .contentText(post.getContentText())
-                        .createdAt(post.getCreatedAt())
-                        .updatedAt(post.getUpDatedAt())
-                        .fileNames(post.getImageSet().stream()
+                        .postId(post.getPostId()) // 게시글 ID
+                        .title(post.getTitle()) // 제목
+                        .contentText(post.getContentText()) // 본문 내용
+                        .createdAt(post.getCreatedAt()) // 생성일
+                        .updatedAt(post.getUpDatedAt()) // 수정일
+                        .fileNames(post.getImageSet().stream() // 첨부된 파일들의 링크
                                 .map(image -> image.getUuid() + "_" + image.getFileName())
                                 .collect(Collectors.toList()))
-                        .requiredParticipants(post.getRequiredParticipants())
-                        .status(post.getStatus() != null ? post.getStatus().name() : null)
-                        .author(post.getUser() != null ? post.getUser().getUsername() : null)
+                        .requiredParticipants(post.getRequiredParticipants()) // 모집 인원
+                        .status(post.getStatus() != null ? post.getStatus().name() : null) // 모집 상태
+                        .author(post.getUser() != null ? post.getUser().getUsername() : null) // 작성자 정보
                         .build()
                 )
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); // PostDTO 리스트로 변환
+
+        // 게시글 DTO 리스트와 함께 페이징 처리된 결과 반환
+        log.info("게시글 DTO 리스트: {}", dtoList); // 반환되는 게시글 리스트 확인용 로그
 
         return PageResponseDTO.<PostDTO>withAll()
-                .pageRequestDTO(pageRequestDTO)
-                .dtoList(dtoList)
-                .total((int) result.getTotalElements())
-                .build();
+                .pageRequestDTO(pageRequestDTO) // 페이지 요청 정보
+                .dtoList(dtoList) // 게시글 DTO 리스트
+                .total((int) result.getTotalElements()) // 총 게시글 수
+                .build(); // PageResponseDTO 반환
     }
+
+    @Override
+    public void markPostAsInvisible(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+
+        // 게시글을 비공개 처리 (isVisible을 false로 설정)
+        post.setIsVisible(false);
+        postRepository.save(post);  // 변경 사항 저장
+    }
+
+
 
 
 }

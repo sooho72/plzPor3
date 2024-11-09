@@ -38,6 +38,7 @@
                         <th>상태</th>
                         <th>신고 날짜</th>
                         <th>상세보기</th>
+                        <th>비공개 처리</th> <!-- 비공개 처리 버튼 -->
                     </tr>
                     </thead>
                     <tbody>
@@ -48,6 +49,14 @@
                         <td th:text="${#dates.format(report.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
                         <td>
                             <a th:href="@{/posting/read/{postId}(postId=${report.postId})}" class="btn btn-info">상세보기</a>
+                        </td>
+                        <td>
+                            <!-- 신고글 처리 버튼 -->
+                            <button class="btn btn-warning"
+                                    th:if="${report.status == 'PENDING'}"
+                                    th:onclick="|handleSubmit('${report.reportId}')|">
+                                비공개 처리
+                            </button>
                         </td>
                     </tr>
                     </tbody>
@@ -87,11 +96,40 @@
                     console.log("Toggle switch element not found");
                 }
             });
+
+            // 신고글 처리 (비공개 처리)
+            function handleSubmit(reportId) {
+                console.log("접수 버튼 클릭됨. 신고글 ID:", reportId);
+
+                // 경고창을 띄우고 확인을 누르면 비공개 처리
+                if (confirm("이 신고글을 접수하시겠습니까?")) {
+                    console.log("경고창 확인. 신고글 " + reportId + "을 비공개 처리합니다.");
+
+                    // 비공개 처리 후 상태 변경 및 새로고침
+                    fetch("/admin/reports/" + reportId + "/process", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log("신고글 비공개 처리 성공. 글을 비공개 처리하였습니다.");
+                            alert("글을 비공개 처리하였습니다.");
+                            window.location.reload(); // 페이지 새로고침
+                        } else {
+                            console.error("비공개 처리 실패");
+                            alert("비공개 처리 실패");
+                        }
+                    }).catch(error => {
+                        console.error("서버 요청 실패:", error);
+                        alert("비공개 처리 중 오류가 발생했습니다.");
+                    });
+                } else {
+                    console.log("경고창 취소됨");
+                }
+            }
         </script>
     </div>
 </div>
-
-
-
 </body>
 </html>

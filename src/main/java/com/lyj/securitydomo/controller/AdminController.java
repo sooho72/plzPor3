@@ -5,10 +5,8 @@ import com.lyj.securitydomo.service.ReportService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -31,25 +29,7 @@ public class AdminController {
         return "admin/adminIndex"; // adminIndex.html로 이동
     }
 
-//    // 모든 신고글 조회
-//    @GetMapping("/reports")
-//    public String getAllReports(Model model) {
-//        // 모든 신고글을 가져오는 메서드 호출
-//        List<ReportDTO> reportList = reportService.getAllReports(); //모든상태조회
-//        model.addAttribute("reportList", reportList);
-//        model.addAttribute("filter", "all"); // 필터 상태
-//        return "admin/reportList"; // admin/reportList.html로 이동
-//    }
-//
-//    // 처리중인 신고글 조회
-//    @GetMapping("/reports/in-progress")
-//    public String getReportsInProgress(Model model) {
-//        // 처리 중인 신고글을 가져오는 메서드 호출
-//        List<ReportDTO> reportList = reportService.getReportsInProgress(); //처리중인 상태만
-//        model.addAttribute("reportList", reportList);
-//        model.addAttribute("filter", "in-progress"); // 필터 상태
-//        return "admin/reportList"; // admin/reportList.html로 이동
-//    }
+
 @GetMapping("/reports")
 public String getReports(@RequestParam(value = "filter", required = false, defaultValue = "all") String filter, Model model) {
     List<ReportDTO> reportList;
@@ -64,7 +44,7 @@ public String getReports(@RequestParam(value = "filter", required = false, defau
     model.addAttribute("filter", filter);
     return "admin/reportList";  // admin/reportList.html로 이동
 }
-
+//상세보기
     @GetMapping("/admin/reports/{postId}")
     public String getReportsByPostId(@PathVariable Long postId, Model model) {
         List<ReportDTO> reports = reportService.getReportsByPostId(postId); // 서비스에서 해당 postId에 대한 신고들 조회
@@ -73,4 +53,19 @@ public String getReports(@RequestParam(value = "filter", required = false, defau
         return "redirect:/post/read/" + postId; // postId에 해당하는 read.html로 리다이렉트
     }
 
+    // 신고글 처리 (PENDING 상태에서 완료 처리 및 유저에게 보이지 않게 처리)
+    @PostMapping("/reports/{reportId}/process")
+    public String processReport(@PathVariable Long reportId, RedirectAttributes redirectAttributes) {
+        reportService.markReportAsCompleted(reportId);  // 상태를 COMPLETED로 변경하고 유저에게 보이지 않게 처리
+        redirectAttributes.addFlashAttribute("message", "신고글이 처리되었습니다.");
+        return "redirect:/admin/reports";  // 처리 후 목록 페이지로 리다이렉트
+    }
+
+    // 신고글 숨기기 (삭제가 아닌 유저에게 보이지 않게 처리)
+    @PostMapping("/reports/{reportId}/hide")
+    public String hideReport(@PathVariable Long reportId, RedirectAttributes redirectAttributes) {
+        reportService.hideReport(reportId);  // 신고글을 유저에게 보이지 않게 처리
+        redirectAttributes.addFlashAttribute("message", "신고글이 숨겨졌습니다.");
+        return "redirect:/admin/reports";  // 숨기기 후 목록 페이지로 리다이렉트
+    }
 }

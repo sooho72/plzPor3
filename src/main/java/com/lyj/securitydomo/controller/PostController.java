@@ -6,6 +6,7 @@ import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
 import com.lyj.securitydomo.dto.upload.UploadFileDTO;
 import com.lyj.securitydomo.service.PostService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.coobird.thumbnailator.Thumbnailator;
@@ -53,7 +54,12 @@ public class PostController {
         if (pageRequestDTO.getSize() <= 0) {
             pageRequestDTO.setSize(10); // 기본값 설정
         }
+
+        // 게시글 목록을 가져올 때, isVisible이 true인 게시글만 필터링
         PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
+
+        // 모델에 게시글을 추가하기 전에 로그 출력
+        log.info("게시글 목록 전달: {}", responseDTO.getDtoList());
 
         model.addAttribute("posts", responseDTO.getDtoList()); // 게시글 DTO 리스트 추가
         model.addAttribute("totalPages", (int) Math.ceil(responseDTO.getTotal() / (double) pageRequestDTO.getSize())); // 총 페이지 수 계산
@@ -197,5 +203,21 @@ public class PostController {
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.ok().headers(headers).body(resource);
+    }
+    /**
+     * 신고 처리 및 비공개 처리 메서드
+     * 관리자가 신고된 게시글을 비공개로 처리
+     */
+    // 게시글 비공개 처리
+    @PostMapping("/report/{postId}/process")
+    public String markPostAsInvisible(@PathVariable Long postId, RedirectAttributes redirectAttributes) {
+        try {
+            postService.markPostAsInvisible(postId); // 비공개 처리 서비스 호출
+            redirectAttributes.addFlashAttribute("message", "게시글이 비공개 처리되었습니다.");
+            return "redirect:/posting/list"; // 리스트 페이지로 리디렉션
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "해당 게시글을 찾을 수 없습니다.");
+            return "redirect:/posting/list"; // 에러 발생 시 목록으로 리디렉션
+        }
     }
 }

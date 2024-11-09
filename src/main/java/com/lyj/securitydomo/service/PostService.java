@@ -25,6 +25,7 @@ public interface PostService {
     // 게시글 목록 조회 메서드
     PageResponseDTO<PostDTO> list(PageRequestDTO pageRequestDTO);
 
-
+    // 게시글 비공개 처리 메서드
+    void markPostAsInvisible(Long postId);  // 비공개 처리 메서드
 
 }

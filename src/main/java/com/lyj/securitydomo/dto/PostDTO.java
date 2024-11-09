@@ -43,6 +43,7 @@ public class PostDTO {
 
     private double lng;
 
+    private boolean isVisible = true; // 기본값은 true (사용자에게 보임)
     /**
      * 썸네일 이미지 링크를 가져오는 메서드입니다.
      * 업로드된 이미지가 없으면 랜덤 이미지를 반환합니다.

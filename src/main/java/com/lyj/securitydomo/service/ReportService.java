@@ -17,4 +17,8 @@ public interface ReportService {
     List<ReportDTO> getReportsInProgress();//처리중인 신고를 가져오는 메서드
 
     List<ReportDTO> getReportsByPostId(Long postId); // 특정 postId에 대한 신고 목록 가져오는 메서드 추가
+
+    void hideReport(Long reportId); // 신고글을 숨기는 메서드 (삭제 아님)
+
+    void markReportAsCompleted(Long reportId); // 상태를 COMPLETED로 변경 후 숨김
 }

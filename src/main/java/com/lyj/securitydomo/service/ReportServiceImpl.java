@@ -5,6 +5,7 @@ import com.lyj.securitydomo.domain.Report;
 import com.lyj.securitydomo.dto.ReportDTO;
 import com.lyj.securitydomo.repository.ReportRepository;
 import com.lyj.securitydomo.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
@@ -78,7 +79,6 @@ public class ReportServiceImpl implements ReportService {
         return reportDTOList;
     }
 
-    @Override
     public List<ReportDTO> getReportsByPostId(Long postId) {
         List<Report> reports = reportRepository.findByPost_PostId(postId); // 특정 postId에 대한 신고 목록을 가져옴
         if (reports.isEmpty()) {
@@ -88,5 +88,37 @@ public class ReportServiceImpl implements ReportService {
         return reports.stream()
                 .map(report -> modelMapper.map(report, ReportDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void hideReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("Report not found"));
+
+        // 신고글의 isVisible을 false로 설정하여 유저에게 보이지 않게 처리
+        report.setInvisible();
+        reportRepository.save(report);  // 변경 사항 저장
+    }
+
+    @Override
+    @Transactional
+    public void markReportAsCompleted(Long reportId) {
+        // 신고글 조회
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("Report not found"));
+
+        // 신고글 상태를 COMPLETED로 변경
+        report.setStatus(Report.ReportStatus.COMPLETED);
+
+        // 신고글에 해당하는 게시글을 비공개로 설정
+        Post post = report.getPost();
+        if (post != null) {
+            post.setIsVisible(false);  // 게시글을 비공개로 처리
+            postRepository.save(post);  // 변경된 게시글 저장
+        }
+
+        // 신고글 상태 저장
+        reportRepository.save(report);  // 신고글 상태 변경 사항 저장
     }
 }

@@ -24,5 +24,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     // 특정 postId에 해당하는 신고들을 조회하는 메서드
     List<Report> findByPost_PostId(Long postId);
 
+    List<Report> findByIsVisibleTrue(); // 유저에게 보이는 신고글 조회
 }
 

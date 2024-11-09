@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
@@ -23,38 +24,60 @@ public class PageRequestDTO {
     private String type; // 검색의 종류
     private String keyword; // 검색어
 
+    /**
+     * 검색의 종류(type)를 쉼표(,)로 구분하여 배열로 반환
+     *
+     * @return 검색의 종류 배열
+     */
     public String[] getTypes() {
         if (type == null || type.isEmpty()) {
             return null;
         }
-        return type.split(","); // 여러 검색 타입을 쉼표로 구분
+        return type.split(","); // 여러 검색 타입을 쉼표로 구분하여 배열로 반환
     }
 
+    /**
+     * Pageable 객체를 반환하여 페이지 요청에 필요한 정보를 전달
+     *
+     * @param props 정렬 기준
+     * @return Pageable 객체 (정렬 방식은 descending)
+     */
     public Pageable getPageable(String... props) {
-        return PageRequest.of(this.page - 1, this.size,
-                Sort.by(props).descending());
+        // 기본적으로 내림차순 정렬, 오름차순 정렬을 지원할 수 있도록 수정 가능
+        if (props.length > 1 && "asc".equals(props[1])) {
+            return PageRequest.of(this.page - 1, this.size, Sort.by(props[0]).ascending()); // 오름차순 정렬
+        }
+        return PageRequest.of(this.page - 1, this.size, Sort.by(props[0]).descending()); // 내림차순 정렬
     }
 
-    private String link;
+    private String link; // 페이지 링크 저장
 
+    /**
+     * 페이지 링크를 생성하여 반환
+     *
+     * @return 생성된 페이지 링크
+     */
     public String getLink() {
         if (link == null) {
             StringBuilder builder = new StringBuilder();
             builder.append("page=" + this.page);
             builder.append("&size=" + this.size);
 
+            // 검색 유형(type)이 설정되어 있으면 링크에 추가
             if (type != null && type.length() > 0) {
                 builder.append("&type=" + type);
             }
+            // 검색어(keyword)가 설정되어 있으면 URL 인코딩하여 추가
             if (keyword != null) {
                 try {
                     builder.append("&keyword=" + URLEncoder.encode(keyword, "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    // 예외 처리 추가
+                    // 예외 처리: URL 인코딩 실패시
+                    e.printStackTrace();
                 }
             }
-            link = builder.toString();
+            link = builder.toString(); // 최종 링크 생성
         }
-        return link;
+        return link; // 생성된 링크 반환
     }
 }

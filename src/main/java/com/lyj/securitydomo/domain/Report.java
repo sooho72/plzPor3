@@ -30,10 +30,11 @@ public class Report {
 
     @Column(nullable = false, length = 255)
     private String reason;
-
     @Enumerated(EnumType.STRING) // 문자열로 저장
     @Column(nullable = false)
     private ReportStatus status; // 열거형으로 변경
+    @Builder.Default
+    private boolean isVisible = true;  // 기본값은 true (유저에게 보임)
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -60,4 +61,7 @@ public class Report {
                 '}';
     }
 
+    public void setInvisible() {
+        this.isVisible = false;  // 'false'로 설정하면 유저에게 보이지 않게 처리
+    }
 }

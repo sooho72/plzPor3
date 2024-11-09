@@ -30,4 +30,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostSearch {
     @EntityGraph(attributePaths = {"imageSet"})
     @Query("select p from Post p where p.postId=:postId")
     Optional<Post> findByIdWithImages(Long postId);
+    // isVisible == true인 게시글만 조회
+    Page<Post> findByIsVisibleTrue(Pageable pageable);
 }
