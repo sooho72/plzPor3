@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -61,12 +64,19 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     @Override
     public PostDTO readOne(Long postId) {
-        // 게시글을 조회할 때, isVisible이 true인 경우에만 반환
-        // findById로 게시글을 찾고, isVisible이 true인 게시글만 필터링
-        Post post = postRepository.findById(postId)
-                .filter(p -> p.isVisible()) // isVisible이 true인 게시글만 필터링
-                .orElseThrow(() -> new EntityNotFoundException("Post not found or post is invisible"));
+        // 현재 사용자 정보 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ADMIN")); // "ADMIN" 권한 확인
 
+        // 게시글을 조회 (관리자는 비공개 상태도 무시하고 조회)
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+
+        // 게시글이 비공개 상태이고 관리자가 아니라면 예외 발생
+        if (!post.isVisible() && !isAdmin) {
+            throw new EntityNotFoundException("Post not found or post is invisible");
+        }
 
         return PostDTO.builder()
                 .postId(post.getPostId())
@@ -157,7 +167,7 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
 
         // 게시글을 비공개 처리 (isVisible을 false로 설정)
-        post.setIsVisible(false);
+        post.makeInvisible();
         postRepository.save(post);  // 변경 사항 저장
     }
 

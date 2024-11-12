@@ -37,12 +37,14 @@ public class PostDTO {
     private String status; // 모집 상태 (모집중 또는 모집완료)
 
     private String author; // 작성자 정보
+
     private List<String> originalImageLinks;
 
     private double lat;
 
     private double lng;
 
+    @Builder.Default
     private boolean isVisible = true; // 기본값은 true (사용자에게 보임)
     /**
      * 썸네일 이미지 링크를 가져오는 메서드입니다.

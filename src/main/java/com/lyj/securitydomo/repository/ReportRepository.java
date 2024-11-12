@@ -18,12 +18,12 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     // 모든 신고를 가져오는 기본 메서드
     List<Report> findAll();
 
-    // 특정 상태의 신고를 가져오는 메서드
+    // 특정 상태의 신고를 가져오는 메서드 (예: PENDING, HIDDEN, VISIBLE)
     List<Report> findByStatus(Report.ReportStatus status);
 
     // 특정 postId에 해당하는 신고들을 조회하는 메서드
     List<Report> findByPost_PostId(Long postId);
 
-    List<Report> findByIsVisibleTrue(); // 유저에게 보이는 신고글 조회
+    // 특정 게시글의 신고 횟수를 조회하는 메서드
+    int countByPost_PostId(Long postId);
 }
-

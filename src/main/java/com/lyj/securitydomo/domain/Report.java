@@ -17,27 +17,25 @@ import java.util.Date;
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reportId;
+    private Long reportId;  // 신고 ID 자동 생성
 
     @ManyToOne
     @JoinColumn(name = "postId")
-    private Post post;
-
+    private Post post;  // 신고 대상 게시글
 
     @Enumerated(EnumType.STRING) // 문자열로 저장
     @Column(nullable = false)
-    private ReportCategory category; // 열거형으로 변경
+    private ReportCategory category;  // 신고 분류 열거형 (SPAM, ABUSE 등)
 
     @Column(nullable = false, length = 255)
-    private String reason;
+    private String reason;  // 신고 사유
+
     @Enumerated(EnumType.STRING) // 문자열로 저장
     @Column(nullable = false)
-    private ReportStatus status; // 열거형으로 변경
-    @Builder.Default
-    private boolean isVisible = true;  // 기본값은 true (유저에게 보임)
+    private ReportStatus status;  // 신고 진행 상태 (PENDING, VISIBLE, HIDDEN)
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
+    private Date createdAt;  // 생성 날짜
 
     public enum ReportCategory {
         SPAM,
@@ -47,9 +45,11 @@ public class Report {
     }
 
     public enum ReportStatus {
-        PENDING,
-        COMPLETED // 필요시 추가
+        PENDING,   // 신고 처리 대기
+        VISIBLE,   // 공개 상태
+        HIDDEN     // 비공개 상태
     }
+
     @Override
     public String toString() {
         return "Report{" +
@@ -59,9 +59,5 @@ public class Report {
                 ", status=" + status +
                 ", createdAt=" + createdAt +
                 '}';
-    }
-
-    public void setInvisible() {
-        this.isVisible = false;  // 'false'로 설정하면 유저에게 보이지 않게 처리
     }
 }

@@ -2,6 +2,7 @@ package com.lyj.securitydomo.config;
 
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,9 +61,9 @@ public class CustomSecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http,
                                                        BCryptPasswordEncoder bCryptPasswordEncoder,
-                                                       UserDetailsService userDetailsService, AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        AuthenticationManagerBuilder builder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
+                                                       @Qualifier("principalDetailService") UserDetailsService userDetailsService,
+                                                       AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
+        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
         builder.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
         return builder.build();
     }
