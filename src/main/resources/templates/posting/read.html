@@ -18,11 +18,8 @@
             <!-- 신청하기 버튼 -->
             <a th:href="@{/posting/apply/{postId}(postId=${post.postId})}" class="btn btn-primary me-2">신청하기</a>
 
-            <!-- 관리자에게는 신고 건수를 표시, 일반 유저에게는 신고하기 버튼 표시 -->
-            <button class="btn btn-outline-danger me-2"
-                    th:if="${isAdmin}"
-                    th:text="'신고 건수: ' + ${reportCount} + '건'">
-            </button>
+            <!-- 관리자에게만 신고 건수를 표시 -->
+            <div th:if="${isAdmin}" th:text="'신고 건수: ' + ${post.reportCount} + '건'"></div>
 
             <!-- 관리자에게는 공개/비공개 표시, 일반 유저에게는 보이지 않음 -->
             <span th:if="${isAdmin}">
@@ -31,11 +28,9 @@
                 </span>
             </span>
 
-            <!-- 일반 유저에게는 신고하기 버튼만 표시 -->
-            <button class="btn btn-outline-danger me-2"
-                    th:if="${!isAdmin}"
-                    data-bs-toggle="modal"
-                    data-bs-target="#reportModal">신고하기</button>
+            <!-- 일반 사용자에게만 신고하기 버튼을 표시 -->
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal"
+                    th:if="${!isAdmin}">신고하기</button>
 
             <!-- 관리자와 유저 모두 수정/삭제 버튼 표시 -->
             <a th:href="@{/posting/modify/{postId}(postId=${post.postId})}" class="btn btn-secondary me-2">수정하기</a>
@@ -57,7 +52,7 @@
         <div class="mt-4">
             <h3 th:text="${post.title}">게시글 제목</h3>
             <p class="text-muted" th:text="'작성자: ' + ${post.author}"></p>
-            <p class="text-muted" th:text="'등록일: ' + ${#dates.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
+            <p class="text-muted" th:text="'등록일: ' + ${#dates.format(post.createdAt, 'yyyy-MM-dd')}"></p>
             <p th:text="${post.contentText}">게시글 본문 내용</p>
         </div>
 

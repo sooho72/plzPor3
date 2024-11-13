@@ -117,37 +117,37 @@ public class ReportServiceImpl implements ReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new EntityNotFoundException("Report not found"));
 
-        // Report의 상태를 VISIBLE로 변경
-        report.setStatus(Report.ReportStatus.VISIBLE);
+        log.info("변경 전 상태 (신고): {}", report.getStatus());
+        report.setStatus(Report.ReportStatus.VISIBLE);  // Report 상태를 VISIBLE로 설정
         reportRepository.save(report);
+        log.info("변경 후 상태 (신고): {}", report.getStatus());
 
-        // 해당 게시글의 공개 상태를 변경
-        Post post = report.getPost(); // 게시글 정보 가져오기
-        post.setIsVisible(true); // 게시글을 공개 상태로 변경 (1)
-        postRepository.save(post); // 게시글 상태 업데이트
-
-        log.info("신고글과 게시글을 공개 처리되었습니다: {}", report);
+        // 필요한 경우 Post 가시성도 설정
+        Post post = report.getPost();
+        if (!post.isVisible()) {
+            post.setIsVisible(true); // 게시글을 공개로 설정
+            postRepository.save(post);
+        }
+        log.info("신고글이 공개 처리되었습니다: {}", report);
     }
 
-    /**
-     * 특정 신고의 상태를 비공개(HIDDEN)로 변경하는 메서드
-     * @param reportId 상태를 변경할 신고 ID
-     */
     @Override
     public void markAsHidden(Long reportId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new EntityNotFoundException("Report not found"));
 
-        // Report의 상태를 HIDDEN으로 변경
-        report.setStatus(Report.ReportStatus.HIDDEN);
+        log.info("변경 전 상태 (신고): {}", report.getStatus());
+        report.setStatus(Report.ReportStatus.HIDDEN);  // Report 상태를 HIDDEN으로 설정
         reportRepository.save(report);
+        log.info("변경 후 상태 (신고): {}", report.getStatus());
 
-        // 해당 게시글의 비공개 상태를 변경
-        Post post = report.getPost(); // 게시글 정보 가져오기
-        post.setIsVisible(false); // 게시글을 비공개 상태로 변경 (0)
-        postRepository.save(post); // 게시글 상태 업데이트
-
-        log.info("신고글과 게시글을 비공개 처리되었습니다: {}", report);
+        // 필요한 경우 Post 가시성도 설정
+        Post post = report.getPost();
+        if (post.isVisible()) {
+            post.setIsVisible(false); // 게시글을 비공개로 설정
+            postRepository.save(post);
+        }
+        log.info("신고글이 비공개 처리되었습니다: {}", report);
     }
 
     /**

@@ -46,6 +46,9 @@ public class PostDTO {
 
     @Builder.Default
     private boolean isVisible = true; // 기본값은 true (사용자에게 보임)
+
+    // 추가할 필드
+    private int reportCount;
     /**
      * 썸네일 이미지 링크를 가져오는 메서드입니다.
      * 업로드된 이미지가 없으면 랜덤 이미지를 반환합니다.
@@ -62,6 +65,15 @@ public class PostDTO {
     }
     public List<String> getOriginalImageLinks() {
         return this.originalImageLinks;
+    }
+
+    // 생성자 및 getter/setter 추가
+    public int getReportCount() {
+        return reportCount;
+    }
+
+    public void setReportCount(int reportCount) {
+        this.reportCount = reportCount;
     }
 
 }

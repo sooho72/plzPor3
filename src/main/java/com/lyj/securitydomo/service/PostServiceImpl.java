@@ -8,6 +8,7 @@ import com.lyj.securitydomo.dto.PageRequestDTO;
 import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
 import com.lyj.securitydomo.repository.PostRepository;
+import com.lyj.securitydomo.repository.ReportRepository;
 import com.lyj.securitydomo.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.lyj.securitydomo.domain.QPost.post;
+
 //import static com.lyj.securitydomo.domain.QUser.user;
 
 
@@ -41,6 +44,8 @@ public class PostServiceImpl implements PostService {
     private Boolean isVisible; // 게시글의 가시성 필터 추가 (null: 모든 게시글, true: 공개, false: 비공개)
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final ReportRepository reportRepository; // ReportRepository 의존성 주입
+
 
     @Override
     public Long register(PostDTO postDTO) {
@@ -64,6 +69,7 @@ public class PostServiceImpl implements PostService {
                 .requiredParticipants(postDTO.getRequiredParticipants())
                 .status(postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : Post.Status.모집중)                 .lat(postDTO.getLat())
                 .lng(postDTO.getLng())
+                .reportCount(0) // 신고 건수를 0으로 초기화
                 .build();
 
         // 파일 정보 추가
@@ -98,6 +104,8 @@ public class PostServiceImpl implements PostService {
 
                 .filter(p -> p.isVisible()) // isVisible이 true인 게시글만 필터링
                 .orElseThrow(() -> new EntityNotFoundException("Post not found or post is invisible"));
+// 신고 건수를 가져와 PostDTO에 포함
+        int reportCount = reportRepository.countByPost_PostId(postId);
 
 // 이미지 링크 목록을 PostDTO에 추가
         List<String> originalImageLinks = post.getImageSet().stream()
@@ -117,6 +125,7 @@ public class PostServiceImpl implements PostService {
                 .requiredParticipants(post.getRequiredParticipants()) // 모집 인원
                 .status(post.getStatus() != null ? post.getStatus().name() : null) // 모집 상태
                 .author(post.getUser() != null ? post.getUser().getUsername() : null) // 작성자 정보
+                .reportCount(reportCount) // 신고 건수 설정
                 .lat(post.getLat()) // 위도
                 .lng(post.getLng()) // 경도
                 .build();
@@ -208,6 +217,7 @@ public class PostServiceImpl implements PostService {
 
         List<PostDTO> dtoList = result.getContent().stream()
                 .map(post -> PostDTO.builder()
+
                         .postId(post.getPostId())
                         .title(post.getTitle())
                         .contentText(post.getContentText())
@@ -219,6 +229,7 @@ public class PostServiceImpl implements PostService {
                         .requiredParticipants(post.getRequiredParticipants())
                         .status(post.getStatus() != null ? post.getStatus().name() : null)
                         .author(post.getUser() != null ? post.getUser().getUsername() : null)
+                        .reportCount(reportRepository.countByPost_PostId(post.getPostId())) // 신고 횟수 추가
                         .build()
                 )
                 .collect(Collectors.toList());

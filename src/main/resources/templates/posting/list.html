@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/basic.html}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml" layout:decorate="~{layout/basic.html}">
 
 <head>
   <meta charset="UTF-8">
@@ -49,13 +50,21 @@
                 <p th:text="'모집 인원: ' + ${post.requiredParticipants} + '명'"></p>
               </div>
             </div>
+            <!-- 게시글 목록 카드 부분 수정 -->
             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
               <div class="text-center" th:attr="data-post-id=${post.postId}">
-                <button type="button" class="btn btn-outline-danger mt-auto" data-bs-toggle="modal" data-bs-target="#reportModal">
+                <!-- 일반 사용자에게만 신고하기 버튼을 표시 (관리자에게는 숨김) -->
+                <button type="button" class="btn btn-outline-danger mt-auto" data-bs-toggle="modal" data-bs-target="#reportModal"
+                        th:if="${!isAdmin}">
                   신고하기
                 </button>
-                <!-- 신청하기 버튼 -->
-                <button type="button" class="btn btn-primary apply-button mt-auto" data-bs-toggle="modal" data-bs-target="#applyModal" data-post-id="${post.postId}">
+
+                <!-- 관리자에게만 신고 건수를 표시 (일반 사용자에게는 숨김) -->
+                <div th:if="${isAdmin}" th:text="'신고 건수: ' + ${post.reportCount} + '건'"></div>
+
+                <!-- 신청하기 버튼 (모든 사용자에게 표시) -->
+                <button type="button" class="btn btn-primary apply-button mt-auto" data-bs-toggle="modal" data-bs-target="#applyModal"
+                        data-post-id="${post.postId}">
                   신청하기
                 </button>
               </div>

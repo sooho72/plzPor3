@@ -30,6 +30,7 @@ public class Post extends BaseEntity {
     // 모집 인원 필드
     private Integer requiredParticipants; // 모집 인원
 
+
     // 모집 상태 필드
     @Enumerated(EnumType.STRING)
     private Status status; // 모집 상태 (모집중 또는 모집완료)
@@ -47,6 +48,9 @@ public class Post extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "user_id")
     private User user; // 작성자 정보
+
+    @Column(nullable = false)
+    private int reportCount = 0; // 신고 건수를 0으로 초기화
 
     // 게시글과 관련된 이미지 목록
     @OneToMany(mappedBy = "post",
@@ -156,5 +160,13 @@ public class Post extends BaseEntity {
     // getAuthor 메서드
     public String getAuthor() {
         return this.user != null ? user.getUsername() : null;  // 작성자 정보 반환
+    }
+    // reportCount getter & setter 추가
+    public int getReportCount() {
+        return reportCount;
+    }
+
+    public void setReportCount(int reportCount) {
+        this.reportCount = reportCount;
     }
 }

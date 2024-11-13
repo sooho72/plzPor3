@@ -52,7 +52,7 @@ public class PostController {
      * @return
      */
     @GetMapping("/list")
-    public String list(PageRequestDTO pageRequestDTO, Model model) {
+    public String list(PageRequestDTO pageRequestDTO, Model model,@AuthenticationPrincipal PrincipalDetails principal) {
         // size가 유효하지 않은 경우 기본값으로 설정
         if (pageRequestDTO.getSize() <= 0) {
             pageRequestDTO.setSize(10); // 기본값 설정
@@ -60,6 +60,10 @@ public class PostController {
 
         // 게시글 목록을 가져올 때, isVisible이 true인 게시글만 필터링
         PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
+        // 현재 사용자가 관리자인지 여부 확인
+        boolean isAdmin = principal != null && principal.getUser().getRole().equals("ADMIN");
+        model.addAttribute("isAdmin", isAdmin); // 관리자 여부를 뷰에 전달
+
 
         // 모델에 게시글을 추가하기 전에 로그 출력
         log.info("게시글 목록 전달: {}", responseDTO.getDtoList());
@@ -133,6 +137,7 @@ public class PostController {
         // principal이 null이 아니고, 사용자의 역할이 "ADMIN"일 경우 true 설정
         boolean isAdmin = principal != null && principal.getUser().getRole().equals("ADMIN");
         model.addAttribute("isAdmin", isAdmin); // 관리자 여부를 뷰에 전달
+
 
         return "posting/read"; // read.html 템플릿 반환
     }
@@ -334,7 +339,7 @@ public class PostController {
                  * 신고 처리 및 비공개 처리 메서드
                  * 관리자가 신고된 게시글을 비공개로 처리
                  */
-                // 게시글 비공개 처리
+//                 게시글 비공개 처리
 //                @PostMapping("/report/{postId}/process")
 //                public String markPostAsInvisible (@PathVariable Long postId, RedirectAttributes redirectAttributes){
 //                    try {

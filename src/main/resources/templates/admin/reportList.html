@@ -21,7 +21,7 @@
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="reportToggleSwitch" th:checked="${filter == 'in-progress'}">
             <label class="form-check-label" for="reportToggleSwitch" id="reportToggleLabel">
-                <span th:text="${filter == 'in-progress' ? '전체 목록 보기' : '처리중인 글만 보기'}"></span>
+                <span th:text="${filter == 'in-progress' ? '전체글 보기' : '공개글 보기'}"></span>
             </label>
         </div>
 
@@ -51,7 +51,7 @@
                                     th:text="${report.status == 'HIDDEN' ? '공개 처리' : '비공개 처리'}"
                                     th:data-status="${report.status}"
                                     th:data-reportId="${report.reportId}"
-                                    th:onclick="|confirmToggleVisibility(this)|">
+                                    onclick="confirmToggleVisibility(this)"> <!-- 여기에 onclick 추가 -->
                             </button>
                         </td>
                     </tr>
@@ -59,60 +59,82 @@
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- JavaScript -->
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const toggleSwitch = document.getElementById("reportToggleSwitch");
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggleSwitch = document.getElementById("reportToggleSwitch");
 
-                // 필터 토글
-                if (toggleSwitch) {
-                    toggleSwitch.addEventListener("change", function() {
-                        let newUrl = "/admin/reports";
-                        newUrl += toggleSwitch.checked ? "?filter=in-progress" : "?filter=all";
-                        window.location.href = newUrl;
-                    });
-                }
+            // 필터 토글 비동기 요청
+            toggleSwitch.addEventListener("change", function() {
+                const filterType = toggleSwitch.checked ? "in-progress" : "all";  // 필터 상태 결정
+                fetchReports(filterType);  // 필터링된 데이터를 가져오기 위한 함수 호출
             });
+        });
 
-            // 공개/비공개 처리 이벤트
-            function confirmToggleVisibility(buttonElement) {
-                const currentStatus = buttonElement.getAttribute('data-status');
-                const reportId = buttonElement.getAttribute('data-reportId');
+        // 비동기적으로 데이터를 가져와 페이지에 반영하는 함수
+        function fetchReports(filterType) {
+            const url = `/admin/reports?filter=${filterType}`;
 
-                // 상태에 따라 경고문구 설정
-                const action = currentStatus === 'VISIBLE' ? '비공개 처리' : '공개 처리';
-                const confirmation = confirm(`${action}하시겠습니까?`);
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("네트워크 응답이 올바르지 않습니다.");
+                    }
+                    return response.json();  // JSON 데이터 파싱
+                })
+                .then(data => {
+                    const tableBody = document.querySelector("table tbody");
+                    tableBody.innerHTML = "";
 
-                if (confirmation) {
-                    const isVisible = currentStatus === 'VISIBLE' ? false : true;  // 현재 상태에 따라 반대로 처리
-                    toggleVisibility(reportId, isVisible);  // 상태 변경
-                }
-            }
+                    data.reportList.forEach(report => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${report.postTitle}</td>
+                            <td>${report.reportCount}</td>
+                            <td><a href="/posting/read/${report.postId}" class="btn btn-info">상세보기</a></td>
+                            <td>
+                                <button class="btn ${report.status === 'HIDDEN' ? 'btn-warning' : 'btn-success'}"
+                                        onclick="confirmToggleVisibility(${report.reportId}, '${report.status}')">
+                                    ${report.status === 'HIDDEN' ? '공개 처리' : '비공개 처리'}
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching report data:", error);
+                    alert("데이터를 불러오는 중 오류가 발생했습니다.");
+                });
+        }
 
-            // 상태 변경을 서버에 전달하는 함수
-            function toggleVisibility(reportId, isVisible) {
-                const endpoint = `/admin/reports/${reportId}/toggle-visibility`;
-                const visibilityPayload = { visible: isVisible };
+        // 공개/비공개 상태 토글
+        function confirmToggleVisibility(reportId, currentStatus) {
+            const isVisible = currentStatus === 'HIDDEN';
+            const confirmation = confirm(isVisible ? "공개 처리하시겠습니까?" : "비공개 처리하시겠습니까?");
 
-                fetch(endpoint, {
+            if (confirmation) {
+                fetch(`/admin/reports/${reportId}/toggle-visibility`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(visibilityPayload)
-                }).then(response => {
-                    if (response.ok) {
+                    body: JSON.stringify({ visible: isVisible })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("비공개/공개 처리 중 서버 오류가 발생했습니다.");
+                        }
                         alert(isVisible ? "공개 처리 완료" : "비공개 처리 완료");
-                        window.location.reload();  // 페이지 리로드
-                    } else {
+                        fetchReports(document.getElementById("reportToggleSwitch").checked ? "in-progress" : "all");
+                    })
+                    .catch(error => {
+                        console.error("Error toggling visibility:", error);
                         alert("처리 중 오류가 발생했습니다.");
-                    }
-                }).catch(error => {
-                    console.error("오류:", error);
-                    alert("처리 중 오류가 발생했습니다.");
-                });
+                    });
             }
-        </script>
-    </div>
+        }
+    </script>
 </div>
 </body>
 </html>
