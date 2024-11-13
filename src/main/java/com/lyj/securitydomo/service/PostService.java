@@ -2,6 +2,7 @@
 package com.lyj.securitydomo.service;
 
 import com.lyj.securitydomo.domain.Post;
+import com.lyj.securitydomo.domain.User;
 import com.lyj.securitydomo.dto.PageRequestDTO;
 import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
@@ -26,6 +27,11 @@ public interface PostService {
     PageResponseDTO<PostDTO> list(PageRequestDTO pageRequestDTO);
 
     // 게시글 비공개 처리 메서드
-    void markPostAsInvisible(Long postId);  // 비공개 처리 메서드
+    void makePostInvisible(Long postId);  // 비공개 처리 메서드
+
+    void makePostVisible(Long postId); // 공개 처리 메서드
+
+    public PageResponseDTO<PostDTO> writinglist(PageRequestDTO pageRequestDTO, User user);
+
 
 }

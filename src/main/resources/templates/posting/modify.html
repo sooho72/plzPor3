@@ -3,26 +3,181 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/basic.html}">
 
+<head>
+  <meta charset="UTF-8">
+  <title>게시글 수정</title>
+  <!-- Bootstrap CSS 링크 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    #map {
+      width: 100%;
+      height: 400px;
+      margin-top: 10px;
+    }
+    .img-thumbnail {
+      width: 150px;
+      height: auto;
+      margin: 5px;
+    }
+  </style>
+  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=9n21s23li1"></script>
+  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps-geocoder.js?ncpClientId=9n21s23li1"></script>
+</head>
+
+<body>
 <div layout:fragment="content">
-  <div class="container">
-    <h3>[[${board.writer}]]의 글 수정</h3>
-    <form action="/board/">
-    <input type="hidden" name="num" id="num" value="${board.num }">
-    <div class="form-group">
-      <label for="title">제목:</label>
-      <input type="text" class="form-control" id="title" name="title" th:value="${post.title}">
+  <header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+      <div class="text-center text-white">
+        <h1 class="display-4 fw-bolder">게시글 수정</h1>
+        <p class="lead fw-normal text-white-50 mb-0">게시글 내용을 수정하세요!</p>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="writer">글쓴이:</label>
-      <input type="text" class="form-control" id="writer" name="writer" th:value="${post.user.user_id}" readonly="readonly">
+  </header>
+
+  <section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+      <div th:if="${error}" class="alert alert-danger" role="alert">
+        <p th:text="${error}"></p>
+      </div>
+      <form th:action="@{/posting/modify/{postId}(postId=${post.postId})}" method="post" enctype="multipart/form-data" onsubmit="return confirm('수정하시겠습니까?');">
+        <input type="hidden" th:value="${post.postId}" name="postId" />
+
+        <!-- 제목 입력 필드 -->
+        <div class="mb-3">
+          <label for="title" class="form-label">제목</label>
+          <input type="text" class="form-control" id="title" name="title" th:value="${post.title}" required>
+        </div>
+
+        <!-- 내용 입력 필드 -->
+        <div class="mb-3">
+          <label for="contentText" class="form-label">내용</label>
+          <textarea class="form-control" id="contentText" name="contentText" rows="5" required>[[${post.contentText}]]</textarea>
+        </div>
+
+        <!-- 모집 인원 입력 필드 -->
+        <div class="mb-3">
+          <label for="requiredParticipants" class="form-label">모집 인원</label>
+          <input type="number" class="form-control" id="requiredParticipants" name="requiredParticipants" th:value="${post.requiredParticipants}" min="1" required>
+        </div>
+
+        <!-- 장소 검색 및 지도 표시 영역 -->
+        <div>
+          <label>만남 장소 설정</label>
+          <input type="text" id="search" placeholder="장소 검색" style="width:80%; margin-bottom:10px;">
+          <button type="button" id="searchButton">검색</button>
+          <div id="map"></div>
+        </div>
+        <input type="hidden" id="latitude" name="lat" th:value="${post.lat}">
+        <input type="hidden" id="longitude" name="lng" th:value="${post.lng}">
+
+        <!-- 기존 이미지 미리보기 -->
+        <div th:if="${originalImages != null && originalImages.size() > 0}">
+          <label class="form-label">기존 이미지 미리보기</label>
+          <div th:each="image : ${originalImages}">
+            <img th:src="${image}" alt="기존 이미지 미리보기" class="img-thumbnail" style="width: 150px; height: auto;" />
+          </div>
+        </div>
+
+        <!-- 이미지 업로드 필드 -->
+        <div class="mb-3">
+          <label for="files" class="form-label">이미지 업로드</label>
+          <input type="file" class="form-control" id="files" name="files" accept="image/*" multiple>
+          <div class="form-text">이미지 파일만 업로드할 수 있습니다. 기존 이미지는 유지됩니다.</div>
+        </div>
+
+        <!-- 수정 버튼과 목록으로 돌아가기 버튼 -->
+        <button type="submit" class="btn btn-primary">게시글 수정</button>
+        <a th:href="@{/posting/list}" class="btn btn-secondary">목록으로 돌아가기</a>
+      </form>
     </div>
-    <div class="form-group">
-      <label for="content">내용</label>
-      <textarea class="form-control" rows="5" id="content" name="content">[[${board.content}]]</textarea>
-    </div>
-    <div class="form-group text-right">
-      <button type="button" class="btn btn-secondary btn-sm" id="btnModify">수정하기</button>
-    </div>
-    </form>
-  </div>
+  </section>
+
+  <!-- 지도 초기화 및 검색 기능을 위한 스크립트 -->
+  <script>
+    var map;
+    var infoWindow;
+
+    function initializeMap() {
+      var lat = parseFloat(document.getElementById('latitude').value) || 37.3595316;
+      var lng = parseFloat(document.getElementById('longitude').value) || 127.1052133;
+
+      map = new naver.maps.Map("map", {
+        center: new naver.maps.LatLng(lat, lng),
+        zoom: 15,
+        minZoom: 8,
+        mapTypeControl: true,
+        zoomControl: true,
+        zoomControlOptions: { position: naver.maps.Position.TOP_RIGHT }
+      });
+
+      var marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(lat, lng),
+        map: map
+      });
+
+      infoWindow = new naver.maps.InfoWindow({ anchorSkew: true });
+      map.setCursor('pointer');
+    }
+
+    function searchCoordinateToAddress(latlng) {
+      infoWindow.close();
+      naver.maps.Service.reverseGeocode({
+        coords: latlng,
+        orders: [naver.maps.Service.OrderType.ADDR, naver.maps.Service.OrderType.ROAD_ADDR].join(',')
+      }, function (status, response) {
+        if (status === naver.maps.Service.Status.ERROR) return alert('Something Wrong!');
+        var items = response.v2.results;
+        var address = items[0].address || '';
+        infoWindow.setContent('<div style="padding:10px;min-width:200px;">검색 좌표: ' + address + '</div>');
+        infoWindow.open(map, latlng);
+        document.getElementById('latitude').value = latlng.getLat();
+        document.getElementById('longitude').value = latlng.getLng();
+      });
+    }
+
+    function searchAddressToCoordinate(address) {
+      naver.maps.Service.geocode({ query: address }, function (status, response) {
+        if (status === naver.maps.Service.Status.ERROR) return alert('Something Wrong!');
+        if (response.v2.meta.totalCount === 0) return alert('검색 결과가 없습니다.');
+
+        var item = response.v2.addresses[0];
+        var point = new naver.maps.Point(item.x, item.y);
+        document.getElementById('latitude').value = item.y;
+        document.getElementById('longitude').value = item.x;
+        infoWindow.setContent('<div style="padding:10px;">검색 주소: ' + address + '</div>');
+        map.setCenter(point);
+        infoWindow.open(map, point);
+      });
+    }
+
+    function initGeocoder() {
+      initializeMap();
+      map.addListener('click', function (e) {
+        searchCoordinateToAddress(e.coord);
+      });
+      document.getElementById('searchButton').addEventListener('click', function () {
+        var address = document.getElementById('search').value;
+        if (address) searchAddressToCoordinate(address);
+        else alert("장소를 입력하세요.");
+      });
+    }
+
+    naver.maps.onJSContentLoaded = initGeocoder;
+  </script>
+
+  <!-- 수정 완료 메시지 표시 스크립트 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('result') === 'modified') {
+        alert("수정이 완료되었습니다.");
+      }
+    });
+  </script>
 </div>
+</body>
+</html>

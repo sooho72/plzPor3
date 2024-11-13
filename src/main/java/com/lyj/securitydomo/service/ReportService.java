@@ -12,5 +12,6 @@ public interface ReportService {
     void markAsVisible(Long reportId); // 공개 처리
     void markAsHidden(Long reportId); // 비공개 처리
     int countReportsByPostId(Long postId); // 특정 게시글의 신고 횟수 조회
+    Long getPostIdByReportId(Long reportId); // 신고 ID로 게시글 ID 반환
 
 }

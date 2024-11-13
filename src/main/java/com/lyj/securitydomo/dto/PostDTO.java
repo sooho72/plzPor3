@@ -61,7 +61,6 @@ public class PostDTO {
         }
     }
     public List<String> getOriginalImageLinks() {
-        // 필요하다면 파일 링크 로직을 작성해 추가합니다.
         return this.originalImageLinks;
     }
 

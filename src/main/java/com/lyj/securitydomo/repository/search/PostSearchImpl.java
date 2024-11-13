@@ -1,8 +1,8 @@
-
 package com.lyj.securitydomo.repository.search;
 
 import com.lyj.securitydomo.domain.Post;
 import com.lyj.securitydomo.domain.QPost;
+
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.data.domain.Page;
@@ -13,31 +13,54 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import java.util.List;
 
 public class PostSearchImpl extends QuerydslRepositorySupport implements PostSearch {
-    public PostSearchImpl() {super(Post.class);}
+
+    public PostSearchImpl() {
+        super(Post.class);
+    }
+
+    /**
+     * 동적 검색 메서드: 게시글의 다양한 조건을 기반으로 검색합니다.
+     *
+     * @param types 검색 타입 배열 (예: 제목, 내용 등)
+     * @param keyword 검색 키워드
+     * @param pageable 페이징 정보
+     * @param isVisible 게시글의 가시성 필터 (null: 모든 게시글, true: 공개, false: 비공개)
+     * @return 조건에 맞는 게시글 페이지 결과
+     */
     @Override
-    public Page<Post> searchAll(String[] types, String keyword, Pageable pageable) {
+    public Page<Post> searchAll(String[] types, String keyword, Pageable pageable, Boolean isVisible) {
         QPost post = QPost.post;
         JPQLQuery<Post> query = from(post);
 
-        if((types != null) && (types.length > 0) && keyword != null) {
+        // 검색 조건을 적용
+        if (types != null && types.length > 0 && keyword != null) {
             BooleanBuilder builder = new BooleanBuilder();
-            for(String type : types) {
+
+            // 각 검색 타입에 따라 조건을 추가
+            for (String type : types) {
                 switch (type) {
-                    case "t":
-                        builder.and(post.title.contains(keyword));
+                    case "t": // 제목 검색
+                        builder.or(post.title.contains(keyword));
                         break;
-                    case "c":
-                        builder.and(post.contentText.contains(keyword));
+                    case "c": // 내용 검색
+                        builder.or(post.contentText.contains(keyword));
                         break;
                 }
             }
-            query.where(builder);
+            query.where(builder); // 검색 조건 적용
         }
-        query.where(post.postId.gt(0L));
-        this.getQuerydsl().applyPagination(pageable, query);
-        List<Post> list = query.fetch();
-        long total = query.fetchCount();
-        return new PageImpl<>(list, pageable, total);
+
+        // 가시성 필터를 동적으로 추가
+        if (isVisible != null) {
+            query.where(post.isVisible.eq(isVisible)); // true 또는 false에 따라 필터링
+        }
+
+        query.where(post.postId.gt(0L)); // 기본 조건: postId가 0보다 큰 게시글만 조회
+        this.getQuerydsl().applyPagination(pageable, query); // 페이지네이션 적용
+
+        List<Post> list = query.fetch(); // 결과 리스트 조회
+        long total = query.fetchCount(); // 전체 게시글 수 조회
+
+        return new PageImpl<>(list, pageable, total); // PageImpl로 반환하여 페이지 정보 포함
     }
 }
-

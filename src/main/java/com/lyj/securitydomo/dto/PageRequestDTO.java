@@ -23,6 +23,7 @@ public class PageRequestDTO {
 
     private String type; // 검색의 종류
     private String keyword; // 검색어
+    private Boolean isVisible; // 게시글 공개 여부
 
     /**
      * 검색의 종류(type)를 쉼표(,)로 구분하여 배열로 반환
@@ -60,22 +61,28 @@ public class PageRequestDTO {
     public String getLink() {
         if (link == null) {
             StringBuilder builder = new StringBuilder();
-            builder.append("page=" + this.page);
-            builder.append("&size=" + this.size);
+            builder.append("page=").append(this.page);
+            builder.append("&size=").append(this.size);
 
             // 검색 유형(type)이 설정되어 있으면 링크에 추가
-            if (type != null && type.length() > 0) {
-                builder.append("&type=" + type);
+            if (type != null && !type.isEmpty()) {
+                builder.append("&type=").append(type);
             }
+
             // 검색어(keyword)가 설정되어 있으면 URL 인코딩하여 추가
             if (keyword != null) {
                 try {
-                    builder.append("&keyword=" + URLEncoder.encode(keyword, "UTF-8"));
+                    builder.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    // 예외 처리: URL 인코딩 실패시
                     e.printStackTrace();
                 }
             }
+
+            // isVisible 필드 추가
+            if (isVisible != null) {
+                builder.append("&isVisible=").append(isVisible);
+            }
+
             link = builder.toString(); // 최종 링크 생성
         }
         return link; // 생성된 링크 반환

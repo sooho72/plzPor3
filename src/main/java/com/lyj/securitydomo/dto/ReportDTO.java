@@ -20,4 +20,6 @@ public class ReportDTO {
     private Date createdAt; // 생성 날짜
     private String postTitle;//게시글 제목
     private int reportCount; // 신고 횟수
+    private boolean isVisible; // 게시글의 공개/비공개 상태 (관리자용)
+
 }

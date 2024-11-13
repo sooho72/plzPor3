@@ -37,6 +37,8 @@ public class Report {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;  // 생성 날짜
 
+    private boolean isVisible;  // 게시글의 비공개/공개 상태 공개(0) 비공개(1)
+
     public enum ReportCategory {
         SPAM,
         ABUSE,
@@ -50,6 +52,13 @@ public class Report {
         HIDDEN     // 비공개 상태
     }
 
+    // ReportStatus에 따라 isVisible 값을 설정하는 메서드
+    public void setStatus(ReportStatus status) {
+        this.status = status;
+        // status가 VISIBLE이면 isVisible을 true로 설정하고, HIDDEN이면 false로 설정
+        this.isVisible = (status == ReportStatus.VISIBLE);
+    }
+
     @Override
     public String toString() {
         return "Report{" +
@@ -58,6 +67,7 @@ public class Report {
                 ", reason='" + reason + '\'' +
                 ", status=" + status +
                 ", createdAt=" + createdAt +
+                ", isVisible=" + isVisible +
                 '}';
     }
 }

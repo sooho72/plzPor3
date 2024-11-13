@@ -33,11 +33,12 @@ public class ReportController {
 //(@RequestBody ReportDTO) 몸통으로 전체를 받겟다,insert일때, form으로 통째로)
 //JSON타입으로 받아서 ReportDTO에서 객체로 받음
 public ResponseEntity<String> createReport(@RequestBody ReportDTO reportDTO) {
-    // 서비스에서 신고를 생성하는 메서드를 호출
+    // 서비스에서 신고를 생성하는 메서드 호출
     reportService.createReport(reportDTO);
-//        logger.info("신고가 성공적으로 접수되었습니다.");
+    log.info("신고가 성공적으로 접수되었습니다. postId={}, category={}, reason={}", reportDTO.getPostId(), reportDTO.getCategory(), reportDTO.getReason());
 
-    return ResponseEntity.ok("신고가 접수되었습니다."); // 여기서 문자열 응답
+    // 신고 접수 성공 후 응답 반환
+    return ResponseEntity.ok("신고가 접수되었습니다.");
 }
 
 //    @GetMapping("/list")

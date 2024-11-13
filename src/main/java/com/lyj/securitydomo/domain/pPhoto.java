@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.util.Random;
 
-
 @Entity
 @Getter
 @Builder
@@ -14,11 +13,11 @@ import java.util.Random;
 public class pPhoto implements Comparable<pPhoto> {
 
     @Id
-    private String uuid;
+    private String uuid; // 고유 식별자
 
-    private String fileName;
+    private String fileName; // 파일 이름
 
-    private int pno;
+    private int pno; // 파일의 순서 번호
 
     // Post와의 연관관계 설정 - 다대일 관계로 설정
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,7 +25,7 @@ public class pPhoto implements Comparable<pPhoto> {
     private Post post;
 
     /**
-     * 썸네일 이미지 링크를 반환하는 메서드입니다.
+     * 썸네일 이미지 링크를 반환하는 메서드
      * UUID와 파일 이름이 존재할 경우 썸네일 이미지(s_ 접두사)를 반환하며, 그렇지 않으면 랜덤 이미지를 반환합니다.
      *
      * @return 썸네일 이미지 링크
@@ -38,8 +37,7 @@ public class pPhoto implements Comparable<pPhoto> {
     }
 
     /**
-     * 원본 이미지 링크를 반환하는 메서드입니다.
-     *
+     * 원본 이미지 링크를 반환하는 메서드
      * @return 원본 이미지 링크
      */
     public String getOriginalLink() {
@@ -69,6 +67,10 @@ public class pPhoto implements Comparable<pPhoto> {
         return Integer.compare(this.pno, other.pno);
     }
 
+    /**
+     * Post 엔티티를 변경하는 메서드
+     * @param post 연관된 Post 엔티티
+     */
     public void changePost(Post post) {
         this.post = post;
     }

@@ -1,6 +1,7 @@
 package com.lyj.securitydomo.controller;
 
 import com.lyj.securitydomo.dto.ReportDTO;
+import com.lyj.securitydomo.service.PostService;
 import com.lyj.securitydomo.service.ReportService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +19,12 @@ import java.util.Map;
 public class AdminController {
 
     private final ReportService reportService;
+    private final PostService postService; // 추가: PostService를 주입 받아야 함
 
     // 생성자 주입
-    public AdminController(ReportService reportService) {
+    public AdminController(ReportService reportService, PostService postService) {
         this.reportService = reportService;
+        this.postService = postService; // 추가된 부분
     }
 
     /**
@@ -70,8 +73,14 @@ public class AdminController {
      */
     @PostMapping("/reports/{reportId}/hide")
     public String hideReport(@PathVariable Long reportId, RedirectAttributes redirectAttributes) {
+        // 신고 처리
         reportService.markAsHidden(reportId);
-        redirectAttributes.addFlashAttribute("message", "신고글이 비공개 처리되었습니다.");
+
+        // 신고된 게시글을 비공개로 설정
+        Long postId = reportService.getPostIdByReportId(reportId); // Report 엔티티에서 해당 게시글 ID를 가져옴
+        postService.makePostInvisible(postId); // 게시글 비공개 처리
+
+        redirectAttributes.addFlashAttribute("message", "신고글과 게시글이 비공개 처리되었습니다.");
         return "redirect:/admin/reports";
     }
 
@@ -81,8 +90,14 @@ public class AdminController {
      */
     @PostMapping("/reports/{reportId}/reveal")
     public String revealReport(@PathVariable Long reportId, RedirectAttributes redirectAttributes) {
+        // 신고 처리
         reportService.markAsVisible(reportId);
-        redirectAttributes.addFlashAttribute("message", "신고글이 공개 처리되었습니다.");
+
+        // 신고된 게시글을 공개로 설정
+        Long postId = reportService.getPostIdByReportId(reportId); // Report 엔티티에서 해당 게시글 ID를 가져옴
+        postService.makePostVisible(postId); // 게시글 공개 처리
+
+        redirectAttributes.addFlashAttribute("message", "신고글과 게시글이 공개 처리되었습니다.");
         return "redirect:/admin/reports";
     }
 

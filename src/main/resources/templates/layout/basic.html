@@ -23,7 +23,10 @@
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     <li sec:authorize="isAuthenticated()" class="nav-item">
-                        <a class="nav-link" href="/post/view">Board List</a>
+                        <a class="nav-link" href="/posting/list">Board List</a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()" class="nav-item">
+                        <a class="nav-link" href="/posting/register">Register</a>
                     </li>
                     <li sec:authorize="hasAnyAuthority('USER')" class="nav-item">
                         <a class="nav-link" href="/User">User</a>

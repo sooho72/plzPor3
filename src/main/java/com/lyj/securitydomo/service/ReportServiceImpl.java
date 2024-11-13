@@ -116,8 +116,17 @@ public class ReportServiceImpl implements ReportService {
     public void markAsVisible(Long reportId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new EntityNotFoundException("Report not found"));
-        report.setStatus(Report.ReportStatus.VISIBLE); // 상태를 VISIBLE로 설정
+
+        // Report의 상태를 VISIBLE로 변경
+        report.setStatus(Report.ReportStatus.VISIBLE);
         reportRepository.save(report);
+
+        // 해당 게시글의 공개 상태를 변경
+        Post post = report.getPost(); // 게시글 정보 가져오기
+        post.setIsVisible(true); // 게시글을 공개 상태로 변경 (1)
+        postRepository.save(post); // 게시글 상태 업데이트
+
+        log.info("신고글과 게시글을 공개 처리되었습니다: {}", report);
     }
 
     /**
@@ -128,8 +137,17 @@ public class ReportServiceImpl implements ReportService {
     public void markAsHidden(Long reportId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new EntityNotFoundException("Report not found"));
-        report.setStatus(Report.ReportStatus.HIDDEN); // 상태를 HIDDEN으로 설정
+
+        // Report의 상태를 HIDDEN으로 변경
+        report.setStatus(Report.ReportStatus.HIDDEN);
         reportRepository.save(report);
+
+        // 해당 게시글의 비공개 상태를 변경
+        Post post = report.getPost(); // 게시글 정보 가져오기
+        post.setIsVisible(false); // 게시글을 비공개 상태로 변경 (0)
+        postRepository.save(post); // 게시글 상태 업데이트
+
+        log.info("신고글과 게시글을 비공개 처리되었습니다: {}", report);
     }
 
     /**
@@ -151,5 +169,13 @@ public class ReportServiceImpl implements ReportService {
         ReportDTO reportDTO = modelMapper.map(report, ReportDTO.class);
         reportDTO.setPostTitle(report.getPost().getTitle()); // post의 title을 ReportDTO에 설정
         return reportDTO;
+    }
+
+    //신고 ID에 해당하는 게시글 ID를 반환
+    @Override
+    public Long getPostIdByReportId(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("신고를 찾을 수 없습니다."));
+        return report.getPost().getPostId(); // 신고에 해당하는 게시글 ID 반환
     }
 }
