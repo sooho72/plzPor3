@@ -31,7 +31,7 @@ public class CustomSecurityConfig {
                         // 특정 DispatcherType을 허용
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                         // 로그인, 회원가입, 특정 경로는 인증 없이 접근 가능
-                        .requestMatchers("/login", "/signup", "/user/**", "/", "/all", "/posting/**", "/view/**").permitAll()
+                        .requestMatchers("/login", "/signup","/replies/**", "/user/**", "/", "/all", "/posting/**", "/view/**").permitAll()
                         // POST 요청의 /report/create 경로에 대한 접근 허용 (신고 기능)
                         .requestMatchers(HttpMethod.POST, "/report/create").permitAll()
                         // 관리자 경로 접근 권한 설정 (ADMIN 권한 필요)
