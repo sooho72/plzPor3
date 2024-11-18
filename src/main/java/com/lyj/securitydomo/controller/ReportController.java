@@ -2,6 +2,7 @@ package com.lyj.securitydomo.controller;
 
 import com.lyj.securitydomo.dto.ReportDTO;
 import com.lyj.securitydomo.service.ReportService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +18,12 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/report")
+@RequiredArgsConstructor
 @Log4j2
 public class ReportController {
 
     private final ReportService reportService;
 
-    public ReportController(ReportService reportService) {
-        this.reportService = reportService;
-    }
 
 //
 @PostMapping("/create")

@@ -10,25 +10,19 @@ import java.util.List;
  */
 public interface RequestService {
 
-    /**
-     * 모든 요청을 조회하여 RequestDTO 리스트로 반환합니다.
-     * @return 모든 요청 목록 (RequestDTO 리스트)
-     */
-    List<RequestDTO> getRequests();
 
-    /**
-     * 새로운 요청을 데이터베이스에 저장합니다.
-     * @param request 저장할 Request 객체
-     */
-    void saveRequest(Request request);
+//    List<RequestDTO> getRequests();
 
-    /**
-     * 게시물 ID, 제목, 내용을 기반으로 새로운 요청을 생성하고 저장합니다.
-     * @param postId 게시물 ID
-     * @param title 요청 제목
-     * @param content 요청 내용
-     */
-    void saveRequest(long postId, String title, String content);
+
+    void createRequest(RequestDTO requestDTO);
+
+//    /**
+//     * 게시물 ID, 제목, 내용을 기반으로 새로운 요청을 생성하고 저장합니다.
+//     * @param postId 게시물 ID
+//     * @param title 요청 제목
+//     * @param content 요청 내용
+//     */
+//    void saveRequest(long postId, String title, String content);
 
     /**
      * 특정 게시물에 대한 요청 목록을 조회하여 RequestDTO 리스트로 반환합니다.

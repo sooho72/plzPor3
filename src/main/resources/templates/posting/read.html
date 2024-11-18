@@ -58,7 +58,7 @@
 
         <!-- 지도 표시 영역 -->
         <h4>모임 장소</h4>
-        <div id="map" style="width: 100%; height: 400px;"></div>
+        <div id="map" style="width: 50%; height: 400px;"></div>
 
         <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=9n21s23li1"></script>
         <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps-geocoder.js?ncpClientId=9n21s23li1"></script>
@@ -144,7 +144,29 @@
             </div>
         </div>
     </div>
-
+<!--    신청하기 모달-->
+    <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requestModalLabel">신고하기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="requestForm">
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">신청 메세지:</label>
+                            <textarea class="form-control" id="message" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" id="submitRequest">신청하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script th:inline="javascript">
         const lat = '[[${post.lat}]]';
         const lng = '[[${post.lng}]]';  // lng 값을 Thymeleaf 변수에서 가져오기
@@ -193,6 +215,35 @@
                     .catch(error => {
                         console.error('Error:', error);
                         alert('신고에 실패했습니다. 다시 시도해 주세요.');
+                    });
+            };
+        });
+        //신청하기 이벤트
+        document.getElementById('reportModal').addEventListener('show.bs.modal', function (event) {
+            // postId를 Thymeleaf에서 받아오기
+            const postId = '[[${post.postId}]]'; // Thymeleaf 변수
+
+            // 버튼 클릭 시 신청 처리
+            document.getElementById('submitReport').onclick = function () {
+
+                const message = document.getElementById('message').value;
+
+                fetch('/request/create', {
+                    method: 'POST',
+
+                    body: JSON.stringify({ postId: postId, message: message }),
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(data => {
+                        alert(data);
+                        bootstrap.Modal.getInstance(document.getElementById('requestModal')).hide();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('신청에 실패했습니다. 다시 시도해 주세요.');
                     });
             };
         });

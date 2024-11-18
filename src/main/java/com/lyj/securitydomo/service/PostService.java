@@ -29,8 +29,10 @@ public interface PostService {
     // 게시글 비공개 처리 메서드
     void makePostInvisible(Long postId);  // 비공개 처리 메서드
 
+    //게시글 공개 처리 메서드
     void makePostVisible(Long postId); // 공개 처리 메서드
 
+    //작성자가 쓴 글 리스트
     public PageResponseDTO<PostDTO> writinglist(PageRequestDTO pageRequestDTO, User user);
 
 

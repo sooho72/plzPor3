@@ -20,31 +20,32 @@ public class RequestController {
 
     private final RequestService requestService;
 
+
     /**
      * 새로운 요청을 저장합니다.
      * @param requestDTO 저장할 요청의 정보를 담은 DTO
      * @return 성공 메시지 또는 오류 메시지를 포함한 ResponseEntity
      */
     @PostMapping("/create")
-    public ResponseEntity<String> saveRequest(@RequestBody RequestDTO requestDTO) {
+    public ResponseEntity<String> createRequest(@RequestBody RequestDTO requestDTO) {
         try {
             // RequestService를 통해 요청 저장
-            requestService.saveRequest(requestDTO.getPostId(), requestDTO.getTitle(), requestDTO.getContent());
+            requestService.createRequest(requestDTO);
             return ResponseEntity.ok("신청이 완료되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    /**
-     * 모든 요청 목록을 조회하여 반환합니다.
-     * @return 모든 요청 목록 (RequestDTO 리스트 형태)
-     */
-    @GetMapping("/list")
-    @ResponseBody
-    public List<RequestDTO> getRequests() {
-        return requestService.getRequests();
-    }
+//    /**
+//     * 모든 요청 목록을 조회하여 반환합니다.
+//     * @return 모든 요청 목록 (RequestDTO 리스트 형태)
+//     */
+//    @GetMapping("/list")
+//    @ResponseBody
+//    public List<RequestDTO> getRequests() {
+//        return requestService.getRequests();
+//    }
 
     /**
      * 특정 게시물에 대한 요청 목록을 조회합니다.

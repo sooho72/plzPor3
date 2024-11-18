@@ -7,6 +7,7 @@ import com.lyj.securitydomo.domain.pPhoto;
 import com.lyj.securitydomo.dto.PageRequestDTO;
 import com.lyj.securitydomo.dto.PageResponseDTO;
 import com.lyj.securitydomo.dto.PostDTO;
+import com.lyj.securitydomo.dto.upload.UploadResultDTO;
 import com.lyj.securitydomo.repository.PostRepository;
 import com.lyj.securitydomo.repository.ReportRepository;
 import com.lyj.securitydomo.repository.UserRepository;
@@ -25,8 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.lyj.securitydomo.domain.QPost.post;
@@ -47,6 +47,70 @@ public class PostServiceImpl implements PostService {
     private final ReportRepository reportRepository; // ReportRepository 의존성 주입
 
 
+    /**
+     * Post 엔티티를 PostDTO로 변환하는 유틸리티 메서드
+     * - 중복되는 변환 로직을 재사용하기 위해 분리
+     *
+     * @param post Post 엔티티
+     * @return PostDTO
+     */
+    private PostDTO convertToDTO(Post post) {
+        // Null-safe 이미지 파일 처리
+        List<String> fileNames = post.getImageSet() != null
+                ? post.getImageSet().stream()
+                .map(image -> image.getUuid() + "_" + image.getFileName())
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<String> originalImageLinks = post.getImageSet() != null
+                ? post.getImageSet().stream()
+                .map(pPhoto::getOriginalLink)
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
+        // DTO 빌더로 변환
+        return PostDTO.builder()
+                .postId(post.getPostId()) // 게시글 ID
+                .title(post.getTitle()) // 제목
+                .contentText(post.getContentText()) // 본문 내용
+                .createdAt(post.getCreatedAt()) // 등록 날짜
+                .updatedAt(post.getUpDatedAt()) // 수정 날짜
+                .fileNames(fileNames) // 이미지 파일 이름 목록
+                .originalImageLinks(originalImageLinks) // 원본 이미지 링크 목록
+                .thumbnailLink(getThumbnailLink(post)) // 썸네일 링크
+                .requiredParticipants(post.getRequiredParticipants()) // 모집 인원
+                .status(post.getStatus() != null ? post.getStatus().name() : null) // 모집 상태
+                .author(post.getUser() != null ? post.getUser().getUsername() : null) // 작성자
+                .reportCount(post.getReportCount()) // 신고 횟수
+                .lat(post.getLat()) // 위도
+                .lng(post.getLng()) // 경도
+                .firstComeFirstServe(post.isFirstComeFirstServe()) // 선착순 여부
+                .deadline(post.getDeadline()) // 모집 마감 기한
+                .isVisible(post.isVisible()) // 공개 여부
+                .build();
+    }
+
+    /**
+     * 썸네일 링크를 반환하는 메서드
+     * - 파일이 존재하면 첫 번째 파일의 썸네일 링크를 반환
+     * - 파일이 없으면 랜덤 이미지를 반환
+     *
+     * @param post Post 엔티티
+     * @return 썸네일 링크
+     */
+    private String getThumbnailLink(Post post) {
+        if (post.getImageSet() != null && !post.getImageSet().isEmpty()) {
+            // 파일이 있는 경우 첫 번째 이미지의 썸네일 링크 반환
+            pPhoto firstImage = post.getImageSet().iterator().next();
+            log.info("썸네일 생성 - UUID: {}, FileName: {}", firstImage.getUuid(), firstImage.getFileName());
+            return "/view/s_" + firstImage.getUuid() + "_" + firstImage.getFileName();
+        }
+        // 파일이 없는 경우 랜덤 이미지 반환
+        String randomImage = UploadResultDTO.getRandomImage();
+        log.info("썸네일 생성 - 랜덤 이미지: {}", randomImage);
+        return randomImage;
+    }
+
     @Override
     public Long register(PostDTO postDTO) {
         // 현재 인증된 사용자 정보 가져오기
@@ -65,26 +129,40 @@ public class PostServiceImpl implements PostService {
         Post post = Post.builder()
                 .title(postDTO.getTitle())
                 .contentText(postDTO.getContentText())
-                .user(user)  // 작성자 정보 설정
+                .user(user)
                 .requiredParticipants(postDTO.getRequiredParticipants())
-                .status(postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : Post.Status.모집중)                 .lat(postDTO.getLat())
+                .status(postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : Post.Status.모집중)
+                .lat(postDTO.getLat())
                 .lng(postDTO.getLng())
-                .reportCount(0) // 신고 건수를 0으로 초기화
+                .reportCount(0)
+                .firstComeFirstServe(postDTO.isFirstComeFirstServe())
+                .deadline(postDTO.getDeadline())
                 .build();
+
+        log.info("게시글 생성 중: {}", post);
 
         // 파일 정보 추가
         if (postDTO.getFileNames() != null && !postDTO.getFileNames().isEmpty()) {
             postDTO.getFileNames().forEach(fileName -> {
-                String[] split = fileName.split("_");
-                if (split.length == 2) {
-                    post.addImage(split[0], split[1]);  // 파일 UUID와 파일 이름으로 이미지 추가
+                if (fileName.startsWith("s_")) {
+                    // 썸네일 이름에서 원본 파일 UUID 및 이름 추출
+                    String[] split = fileName.substring(2).split("_", 2); // 's_' 이후 부분 사용
+                    if (split.length == 2) {
+                        post.addImage(split[0], split[1]);
+                        log.info("이미지 추가 - UUID: {}, FileName: {}", split[0], split[1]);
+                    } else {
+                        log.warn("썸네일 파일 이름 형식이 잘못되었습니다: {}", fileName);
+                    }
+                } else {
+                    log.warn("파일 이름이 썸네일 형식을 따르지 않습니다: {}", fileName);
                 }
             });
         } else {
             // 파일이 없을 경우 랜덤 이미지 추가
-            String randomImage = pPhoto.getRandomImage();
-            post.addImage(randomImage, randomImage);
-            log.info("파일이 없어서 랜덤 이미지를 사용합니다: {}", randomImage);
+            String randomImageUrl = UploadResultDTO.getRandomImage();
+            String randomImageName = randomImageUrl.substring(randomImageUrl.lastIndexOf("/") + 1);
+            post.addImage("random-" + UUID.randomUUID(), randomImageName);
+            log.info("파일이 없어서 랜덤 이미지를 사용합니다: {}", randomImageUrl);
         }
 
         // Post 엔티티 저장
@@ -95,71 +173,83 @@ public class PostServiceImpl implements PostService {
     }
 
 
-//    private final PostRepository postRepository;
+    /**
+     * 게시글 단건 조회 메서드
+     * - 비공개된 게시글은 조회 불가
+     *
+     * @param postId 조회할 게시글의 ID
+     * @return 조회된 게시글의 DTO
+     */
     @Override
     public PostDTO readOne(Long postId) {
-        // 게시글을 조회할 때, isVisible이 true인 경우에만 반환
-        // findById로 게시글을 찾고, isVisible이 true인 게시글만 필터링
         Post post = postRepository.findById(postId)
+                .filter(Post::isVisible) // 공개 상태인 게시글만 조회
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없거나 비공개 상태입니다."));
 
-                .filter(p -> p.isVisible()) // isVisible이 true인 게시글만 필터링
-                .orElseThrow(() -> new EntityNotFoundException("Post not found or post is invisible"));
-// 신고 건수를 가져와 PostDTO에 포함
-        int reportCount = reportRepository.countByPost_PostId(postId);
-
-// 이미지 링크 목록을 PostDTO에 추가
-        List<String> originalImageLinks = post.getImageSet().stream()
-                .map(pPhoto::getOriginalLink)
-                .collect(Collectors.toList());
-
-        return PostDTO.builder()
-                .postId(post.getPostId())
-                .title(post.getTitle())
-                .contentText(post.getContentText()) // 본문 내용
-                .createdAt(post.getCreatedAt()) // 생성일
-                .updatedAt(post.getUpDatedAt()) // 수정일
-                .fileNames(post.getImageSet().stream()
-                        .map(image -> image.getUuid() + "_" + image.getFileName())
-                        .collect(Collectors.toList())) // 이미지 링크
-                .originalImageLinks(originalImageLinks) // originalImageLinks 설정
-                .requiredParticipants(post.getRequiredParticipants()) // 모집 인원
-                .status(post.getStatus() != null ? post.getStatus().name() : null) // 모집 상태
-                .author(post.getUser() != null ? post.getUser().getUsername() : null) // 작성자 정보
-                .reportCount(reportCount) // 신고 건수 설정
-                .lat(post.getLat()) // 위도
-                .lng(post.getLng()) // 경도
-                .build();
+        return convertToDTO(post); // 엔티티를 DTO로 변환하여 반환
     }
+
+    /**
+     * 게시글 수정 메서드
+     * - 작성자만 수정 가능
+     * - 엔티티 메서드에 의존하지 않고 직접 필드 수정
+     */
 
     @Override
     public void modify(PostDTO postDTO) {
-        // Post 엔티티 조회
+        // 게시글 조회
         Post post = postRepository.findById(postDTO.getPostId())
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
 
-        // change 메서드 호출하여 필요한 필드 수정
-        post.change(
-                postDTO.getTitle(),
-                postDTO.getContentText(),
-                postDTO.getRequiredParticipants(),
-                postDTO.getStatus() != null ? Post.Status.valueOf(postDTO.getStatus()) : null,
-                postDTO.getLat(),
-                postDTO.getLng()
-        );
-
-        // 이미지 업데이트: 기존 이미지 유지 + 새로운 이미지 추가
-        if (postDTO.getFileNames() != null && !postDTO.getFileNames().isEmpty()) {
-            // 기존 이미지를 제거하지 않고 새로운 이미지를 추가
-            postDTO.getFileNames().forEach(fileName -> {
-                String[] split = fileName.split("_");
-                if (split.length == 2) {
-                    post.addImage(split[0], split[1]);
-                }
-            });
+        // 작성자 검증
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!post.getUser().getUsername().equals(currentUsername)) {
+            throw new IllegalStateException("작성자만 게시글을 수정할 수 있습니다.");
         }
 
-        // 수정된 Post 엔티티 저장
+        // 필드 업데이트
+        if (postDTO.getTitle() != null && !postDTO.getTitle().trim().isEmpty()) {
+            post.setTitle(postDTO.getTitle());
+        }
+        if (postDTO.getContentText() != null && !postDTO.getContentText().trim().isEmpty()) {
+            post.setContentText(postDTO.getContentText());
+        }
+        if (postDTO.getRequiredParticipants() != null && postDTO.getRequiredParticipants() > 0) {
+            post.setRequiredParticipants(postDTO.getRequiredParticipants());
+        }
+        if (postDTO.getStatus() != null) {
+            post.setStatus(Post.Status.valueOf(postDTO.getStatus()));
+        }
+
+        // 유효 범위로 체크 (예: 위도와 경도의 기본값이 0.0일 경우)
+        if (postDTO.getLat() != 0.0) {
+            post.setLat(postDTO.getLat());
+        } else {
+            log.info("위도 값이 기본값이므로 기존 값을 유지합니다.");
+        }
+
+        if (postDTO.getLng() != 0.0) {
+            post.setLng(postDTO.getLng());
+        } else {
+            log.info("경도 값이 기본값이므로 기존 값을 유지합니다.");
+        }
+
+        // 선착순 여부 수정
+        post.setFirstComeFirstServe(postDTO.isFirstComeFirstServe());
+
+        // 마감일 수정
+        if (postDTO.getDeadline() != null) {
+            if (postDTO.getDeadline().before(new Date())) {
+                throw new IllegalArgumentException("마감일은 현재 날짜보다 이후여야 합니다.");
+            }
+            post.setDeadline(postDTO.getDeadline());
+        }
+
+        // 변경된 게시글 저장
         postRepository.save(post);
+
+        // 로그 출력
+        log.info("게시글 수정 완료: ID={}", post.getPostId());
     }
 
     //파일삭제
@@ -208,30 +298,43 @@ public class PostServiceImpl implements PostService {
     }
 
 
-    //페이징
-    // 페이징 목록 조회
+    /**
+     * 게시글 목록 조회 메서드
+     * - 페이징 및 검색 조건 포함
+     *
+     * @param pageRequestDTO 페이징 요청 정보
+     * @return 페이징된 게시글 DTO 목록
+     */
     @Override
     public PageResponseDTO<PostDTO> list(PageRequestDTO pageRequestDTO) {
         Pageable pageable = pageRequestDTO.getPageable("postId");
-        Page<Post> result = postRepository.searchAll(pageRequestDTO.getTypes(), pageRequestDTO.getKeyword(), pageable, pageRequestDTO.getIsVisible());
+        Page<Post> result = postRepository.searchAll(
+                pageRequestDTO.getTypes(),
+                pageRequestDTO.getKeyword(),
+                pageable,
+                pageRequestDTO.getIsVisible()
+        );
+
+        // Post 엔티티 리스트를 DTO 리스트로 변환
+        List<PostDTO> dtoList = result.getContent().stream()
+                .map(this::convertToDTO) // 변환 메서드 사용
+                .collect(Collectors.toList());
+
+        return PageResponseDTO.<PostDTO>withAll()
+                .pageRequestDTO(pageRequestDTO) // 요청 정보
+                .dtoList(dtoList) // 변환된 DTO 리스트
+                .total((int) result.getTotalElements()) // 총 게시글 수
+                .build();
+    }
+
+
+    @Override
+    public PageResponseDTO<PostDTO> writinglist(PageRequestDTO pageRequestDTO, User user) {
+        Pageable pageable = pageRequestDTO.getPageable("postId");
+        Page<Post> result = postRepository.findByUsername(user.getUsername(), pageable);
 
         List<PostDTO> dtoList = result.getContent().stream()
-                .map(post -> PostDTO.builder()
-
-                        .postId(post.getPostId())
-                        .title(post.getTitle())
-                        .contentText(post.getContentText())
-                        .createdAt(post.getCreatedAt())
-                        .updatedAt(post.getUpDatedAt())
-                        .fileNames(post.getImageSet().stream()
-                                .map(image -> image.getUuid() + "_" + image.getFileName())
-                                .collect(Collectors.toList()))
-                        .requiredParticipants(post.getRequiredParticipants())
-                        .status(post.getStatus() != null ? post.getStatus().name() : null)
-                        .author(post.getUser() != null ? post.getUser().getUsername() : null)
-                        .reportCount(reportRepository.countByPost_PostId(post.getPostId())) // 신고 횟수 추가
-                        .build()
-                )
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
 
         return PageResponseDTO.<PostDTO>withAll()
@@ -240,62 +343,46 @@ public class PostServiceImpl implements PostService {
                 .total((int) result.getTotalElements())
                 .build();
     }
-
+    /**
+     * 게시글 비공개 처리 메서드
+     * - 게시글을 비공개(isVisible=false) 상태로 변경
+     *
+     * @param postId 비공개 처리할 게시글 ID
+     */
     @Override
     public void makePostInvisible(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        Post post = getPostById(postId); // 게시글 조회 및 검증
+        post.setIsVisible(false); // 게시글을 비공개로 설정
+        postRepository.save(post); // 변경 사항 저장
 
-        // 게시글을 비공개 처리 (isVisible을 false로 설정)
-        post.makeInvisible();
-        postRepository.save(post);  // 변경 사항 저장
+        log.info("게시글이 비공개 처리되었습니다. ID: {}, 제목: {}", postId, post.getTitle());
     }
 
+    /**
+     * 게시글 공개 처리 메서드
+     * - 게시글을 공개(isVisible=true) 상태로 변경
+     *
+     * @param postId 공개 처리할 게시글 ID
+     */
     @Override
     public void makePostVisible(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글을 찾을 수 없습니다."));
-        post.setIsVisible(true);  // 게시글을 공개로 설정
-        postRepository.save(post); // 변경된 게시글을 저장
+        Post post = getPostById(postId); // 게시글 조회 및 검증
+        post.setIsVisible(true); // 게시글을 공개로 설정
+        postRepository.save(post); // 변경 사항 저장
+
+        log.info("게시글이 공개 처리되었습니다. ID: {}, 제목: {}", postId, post.getTitle());
     }
 
-    @Override
-    public PageResponseDTO<PostDTO> writinglist(PageRequestDTO pageRequestDTO, User user) {
-
-        Pageable pageable = pageRequestDTO.getPageable("postId");
-
-        // isVisible이 true인 게시글만 조회
-        Page<Post> result = postRepository.findByUsername(user.getUsername(),pageable);  // isVisible이 true인 게시글만 조회
-
-        // 조회된 게시글 수 로그로 출력
-//        log.info("조회된 게시글 수: {}", result.getTotalElements());
-
-        // 게시글 정보를 PostDTO로 변환하여 리스트에 담음
-        List<PostDTO> dtoList = result.getContent().stream()
-                .map(post -> PostDTO.builder()
-                        .postId(post.getPostId()) // 게시글 ID
-                        .title(post.getTitle()) // 제목
-                        .contentText(post.getContentText()) // 본문 내용
-                        .createdAt(post.getCreatedAt()) // 생성일
-                        .updatedAt(post.getUpDatedAt()) // 수정일
-                        .fileNames(post.getImageSet().stream() // 첨부된 파일들의 링크
-                                .map(image -> image.getUuid() + "_" + image.getFileName())
-                                .collect(Collectors.toList()))
-                        .requiredParticipants(post.getRequiredParticipants()) // 모집 인원
-                        .status(post.getStatus() != null ? post.getStatus().name() : null) // 모집 상태
-                        .author(post.getUser() != null ? post.getUser().getUsername() : null) // 작성자 정보
-                        .build()
-                )
-                .collect(Collectors.toList()); // PostDTO 리스트로 변환
-
-        // 게시글 DTO 리스트와 함께 페이징 처리된 결과 반환
-//        log.info("게시글 DTO 리스트: {}", dtoList); // 반환되는 게시글 리스트 확인용 로그
-
-        return PageResponseDTO.<PostDTO>withAll()
-                .pageRequestDTO(pageRequestDTO) // 페이지 요청 정보
-                .dtoList(dtoList) // 게시글 DTO 리스트
-                .total((int) result.getTotalElements()) // 총 게시글 수
-                .build(); // PageResponseDTO 반환
+    /**
+     * 게시글 조회 및 검증 메서드
+     * - 게시글 ID를 통해 게시글을 조회하고 존재하지 않을 경우 예외 처리
+     *
+     * @param postId 조회할 게시글 ID
+     * @return Post 엔티티
+     */
+    private Post getPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. ID: " + postId));
     }
 
 
