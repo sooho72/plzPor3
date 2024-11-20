@@ -30,6 +30,7 @@ public class Post extends BaseEntity {
 
     private Integer requiredParticipants; // 모집 인원
 
+
     @Enumerated(EnumType.STRING)
     private Status status; // 모집 상태 (모집중 또는 모집완료)
 
@@ -64,6 +65,8 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private boolean firstComeFirstServe = false; // 선착순 모집 여부
+
+
 
 
     // ===== 메서드 =====
@@ -140,4 +143,5 @@ public class Post extends BaseEntity {
     public String getAuthor() {
         return this.user != null ? user.getUsername() : null;
     }
-}
+
+    }
