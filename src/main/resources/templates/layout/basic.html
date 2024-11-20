@@ -4,45 +4,118 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>BooTaKHey!</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     <style>
-        /* 메뉴 좌우 간격 조정 */
+        /* 기본 배경 스타일 */
+        body {
+            background: linear-gradient(to bottom, #c9f1f9, #a1e6f7);
+            font-family: 'Arial', sans-serif;
+            color: #555;
+        }
+
+        /* 네비게이션 바 */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #5d9cec;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            color: #4a8bd6;
+        }
+
         .navbar-nav .nav-link {
-            padding-left: 15px;
-            padding-right: 15px;
+            color: #555;
+            font-size: 1rem;
+            transition: color 0.3s ease;
         }
 
-        /* 드롭다운 애니메이션 */
+        .navbar-nav .nav-link:hover {
+            color: #5d9cec;
+        }
+
+        /* 드롭다운 메뉴 스타일 */
         .nav-item.dropdown .dropdown-menu {
-            display: block;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            transform: translateY(10px);
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .nav-item.dropdown:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-            margin-top: 0;
+        .dropdown-menu .dropdown-item:hover {
+            background-color: #f1f1f1;
+            color: #5d9cec;
+        }
+
+        /* 헤더 스타일 */
+        .header-img {
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(to top, #c9f1f9, #ffffff);
+            border-bottom: 1px solid #ddd;
+        }
+
+        .header-img img {
+            max-width: 120px;
+            border-radius: 50%;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-img h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #5d9cec;
+            margin-top: 20px;
+        }
+
+        .header-img p {
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        /* 버튼 스타일 */
+        .btn-main {
+            background-color: #5d9cec;
+            color: white;
+            font-size: 1.1rem;
+            border-radius: 20px;
+            padding: 10px 30px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-main:hover {
+            background-color: #4a8bd6;
+            color: white;
+        }
+
+        /* 푸터 스타일 */
+        .footer {
+            background-color: #5d9cec;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
         }
     </style>
 </head>
 <body>
 
+<!-- 네비게이션 바 -->
 <div layout:fragment="navigation">
     <div class="container mt-3 mb-3">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light rounded shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-light rounded shadow-sm">
             <div class="container-fluid">
-                <!-- Home 링크 - 브랜드 역할 -->
+                <!-- 로고 -->
                 <a class="navbar-brand" href="/">
-                    <i class="bi bi-house-door-fill"></i> BooTakHEY!
+                    <i class="bi bi-house-door-fill"></i> BooTaKHey!
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +133,7 @@
                             <a class="nav-link" href="/User"><i class="bi bi-person-fill"></i> User</a>
                         </li>
 
-                        <!-- 관리자 드롭다운 메뉴 - 마우스 오버 시 드롭다운 표시 -->
+                        <!-- 관리자 드롭다운 -->
                         <li sec:authorize="hasAnyAuthority('ADMIN')" class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
                                aria-expanded="false">
@@ -72,9 +145,9 @@
                             </ul>
                         </li>
 
-                        <!-- 마이페이지 드롭다운 메뉴 - 마우스 오버 시 드롭다운 표시 -->
+                        <!-- 마이페이지 드롭다운 -->
                         <li sec:authorize="isAuthenticated()" class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle"  href="/user/readmypage" id="myPageDropdown" role="button"
+                            <a class="nav-link dropdown-toggle" href="/user/readmypage" id="myPageDropdown" role="button"
                                aria-expanded="false">
                                 <i class="bi bi-person-circle"></i> 마이페이지
                             </a>
@@ -86,7 +159,7 @@
                         </li>
                     </ul>
 
-                    <!-- 우측 로그인/로그아웃 -->
+                    <!-- 로그인/로그아웃 -->
                     <ul class="navbar-nav ms-auto">
                         <li sec:authorize="!isAuthenticated()" class="nav-item">
                             <a class="nav-link" href="/user/login"><i class="bi bi-box-arrow-in-right"></i> 로그인</a>
@@ -101,10 +174,18 @@
     </div>
 </div>
 
-<!-- 컨텐츠 프래그먼트 영역 -->
+<!-- 콘텐츠 섹션 -->
 <div layout:fragment="content" class="container mt-4">
     <!-- 각 페이지의 내용이 여기에 들어갑니다 -->
 </div>
 
+<!-- 푸터 -->
+<footer class="footer">
+    <div class="container">
+        <p>© 2024 BootaKey! All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
